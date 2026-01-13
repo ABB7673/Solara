@@ -3701,6 +3701,13 @@ async function performSearch(isLiveSearch = false) {
         return;
     }
 
+    // 获取搜索类型
+    const searchTypeSelect = document.getElementById('searchTypeSelect');
+    const searchType = searchTypeSelect ? searchTypeSelect.value : '';
+    
+    // 后续代码保持不变，但在API.search调用时传入searchType参数
+    const results = await API.search(query, source, 20, state.searchPage, searchType);
+
     if (state.sourceMenuOpen) {
         closeSourceMenu();
     }
@@ -5352,6 +5359,22 @@ function waitForAudioReady(player) {
 }
 
 async function playSong(song, options = {}) {
+    async function playSong(song, options = {}) {
+    // ... 前面代码保持不变 ...
+    
+    try {
+        updateCurrentSongInfo(song, { loadArtwork: false });
+
+        // 使用带重试的音频获取
+        const originalAudioUrl = await getSongUrlWithRetry(song, quality);
+        
+        // ... 后续代码保持不变 ...
+    } catch (error) {
+        console.error('播放歌曲失败:', error);
+        showNotification('所有音源均播放失败，请稍后重试', 'error');
+        throw error;
+    }
+}
     const { autoplay = true, startTime = 0, preserveProgress = false } = options;
 
     window.clearTimeout(pendingPaletteTimer);
@@ -5848,13 +5871,13 @@ async function exploreOnlineMusic() {
 // 修复：加载歌词
 async function loadLyrics(song) {
     try {
-        const lyricUrl = API.getLyric(song);
-        debugLog(`获取歌词URL: ${lyricUrl}`);
+        debugLog(`获取歌词URL: ${song.name}`);
 
-        const lyricData = await API.fetchJson(lyricUrl);
-
-        if (lyricData && lyricData.lyric) {
-            parseLyrics(lyricData.lyric);
+        // 使用带重试的歌词加载
+        const lyricText = await loadLyricsWithRetry(song);
+        
+        if (lyricText) {
+            parseLyrics(lyricText);
             dom.lyrics.classList.remove("empty");
             dom.lyrics.dataset.placeholder = "default";
             debugLog(`歌词加载成功: ${state.lyricsData.length} 行`);
@@ -5864,7 +5887,6 @@ async function loadLyrics(song) {
             dom.lyrics.dataset.placeholder = "message";
             state.lyricsData = [];
             state.currentLyricLine = -1;
-            debugLog("歌词加载失败: 无歌词数据");
         }
     } catch (error) {
         console.error("加载歌词失败:", error);
@@ -5873,7 +5895,6 @@ async function loadLyrics(song) {
         dom.lyrics.dataset.placeholder = "message";
         state.lyricsData = [];
         state.currentLyricLine = -1;
-        debugLog(`歌词加载失败: ${error}`);
     }
 }
 
