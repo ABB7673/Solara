@@ -760,6 +760,161 @@ const savedCurrentPlaylist = (() => {
     return playlists.includes(stored) ? stored : "playlist";
 })();
 
+// ====== 多源API备份系统 ======
+const MUSIC_API_SOURCES = [
+    {
+        name: 'GDStudio',
+        baseUrl: 'https://music-api.gdstudio.xyz/api.php',
+        priority: 1,
+        enabled: true
+    },
+    {
+        name: 'NetEaseProxy',
+        baseUrl: 'https://netease-cloud-music-api-psi-seven.vercel.app',
+        priority: 2,
+        enabled: true,
+        // 网易云API格式转换
+        transformSearch: (keyword, page) => `/cloudsearch?keywords=${encodeURIComponent(keyword)}&limit=20&offset=${(page - 1) * 20}`,
+        transformUrl: (id) => `/song/url?id=${id}&br=320000`,
+        transformLyric: (id) => `/lyric?id=${id}`,
+        transformPic: (id) => `/song/detail?ids=${id}`
+    },
+    {
+        name: 'MusicAPI',
+        baseUrl: 'https://api.injahow.cn/meting',
+        priority: 3,
+        enabled: true,
+        transformSearch: (keyword, page) => `/?server=netease&type=search&id=${encodeURIComponent(keyword)}&page=${page}`,
+        transformUrl: (id) => `/?server=netease&type=url&id=${id}&br=320`,
+        transformLyric: (id) => `/?server=netease&type=lrc&id=${id}`
+    },
+    {
+        name: 'QQMusicProxy', 
+        baseUrl: 'https://api.qq.jsososo.com',
+        priority: 4,
+        enabled: true,
+        transformSearch: (keyword) => `/search?key=${encodeURIComponent(keyword)}&pageSize=20`,
+        transformUrl: (id) => `/song/url?id=${id}`,
+        transformLyric: (id) => `/lyric?id=${id}`
+    }
+];
+
+const LYRIC_API_SOURCES = [
+    {
+        name: 'Primary',
+        priority: 1,
+        getLyricUrl: (song) => API.getLyric(song)
+    },
+    {
+        name: 'NetEase',
+        priority: 2,
+        getLyricUrl: (song) => `https://netease-cloud-music-api-psi-seven.vercel.app/lyric?id=${song.id}`
+    },
+    {
+        name: 'QQMusic',
+        priority: 3,
+        getLyricUrl: (song) => `https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?songmid=${song.id}&format=json&nobase64=1`
+    },
+    {
+        name: 'Kugou',
+        priority: 4,
+        getLyricUrl: (song) => `https://api.injahow.cn/meting/?server=netease&type=lrc&id=${song.id}`
+    }
+];
+
+let currentMusicAPIIndex = 0;
+let currentLyricAPIIndex = 0;
+
+// 获取当前音乐API
+function getCurrentMusicAPI() {
+    return MUSIC_API_SOURCES[currentMusicAPIIndex];
+}
+
+// 切换到下一个音乐API
+function switchToNextMusicAPI() {
+    currentMusicAPIIndex = (currentMusicAPIIndex + 1) % MUSIC_API_SOURCES.length;
+    const nextAPI = getCurrentMusicAPI();
+    debugLog(`🔄 音源切换: ${nextAPI.name}`);
+    showNotification(`切换音源: ${nextAPI.name}`, "warning");
+    return nextAPI;
+}
+
+// 获取当前歌词API
+function getCurrentLyricAPI() {
+    return LYRIC_API_SOURCES[currentLyricAPIIndex];
+}
+
+// 切换到下一个歌词API  
+function switchToNextLyricAPI() {
+    currentLyricAPIIndex = (currentLyricAPIIndex + 1) % LYRIC_API_SOURCES.length;
+    const nextAPI = getCurrentLyricAPI();
+    debugLog(`🔄 歌词源切换: ${nextAPI.name}`);
+    return nextAPI;
+}
+
+// 带重试的音频URL获取
+async function getSongUrlWithRetry(song, quality = "320", maxRetries = 4) {
+    let lastError;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            const api = getCurrentMusicAPI();
+            debugLog(`🎵 尝试获取音频 (${attempt + 1}/${maxRetries}): ${api.name}`);
+            
+            const audioUrl = API.getSongUrl(song, quality);
+            const audioData = await API.fetchJson(audioUrl);
+            
+            if (audioData && audioData.url) {
+                debugLog(`✅ 音频获取成功: ${api.name}`);
+                return audioData.url;
+            }
+            
+            throw new Error('音频URL为空');
+        } catch (error) {
+            lastError = error;
+            debugLog(`❌ 音频获取失败 (${getCurrentMusicAPI().name}): ${error.message}`);
+            
+            if (attempt < maxRetries - 1) {
+                switchToNextMusicAPI();
+            }
+        }
+    }
+    
+    throw new Error(`所有音源均失败: ${lastError?.message || '未知错误'}`);
+}
+
+// 带重试的歌词加载
+async function loadLyricsWithRetry(song, maxRetries = 4) {
+    let lastError;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            const api = getCurrentLyricAPI();
+            debugLog(`📝 尝试加载歌词 (${attempt + 1}/${maxRetries}): ${api.name}`);
+            
+            const lyricUrl = api.getLyricUrl(song);
+            const lyricData = await API.fetchJson(lyricUrl);
+            
+            if (lyricData && lyricData.lyric) {
+                debugLog(`✅ 歌词加载成功: ${api.name}`);
+                return lyricData.lyric;
+            }
+            
+            throw new Error('歌词数据为空');
+        } catch (error) {
+            lastError = error;
+            debugLog(`❌ 歌词加载失败 (${getCurrentLyricAPI().name}): ${error.message}`);
+            
+            if (attempt < maxRetries - 1) {
+                switchToNextLyricAPI();
+            }
+        }
+    }
+    
+    debugLog('⚠️ 所有歌词源均失败，显示无歌词');
+    return null;
+}
+
 // API配置 - 修复API地址和请求方式
 const API = {
     baseUrl: "/proxy",
