@@ -131,20 +131,29 @@
             <button type="button" class="mobile-close-btn" id="mobileSearchClose" aria-label="关闭搜索">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
-            <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" placeholder="搜索歌曲、歌手或专辑...">
-                <div class="source-select-wrapper" id="sourceSelectWrapper">
-                    <button id="sourceSelectButton" class="source-select-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
-                        <span id="sourceSelectLabel">网易云音乐</span>
-                        <i class="fas fa-chevron-down caret-icon" aria-hidden="true"></i>
-                    </button>
-                    <div id="sourceMenu" class="source-menu" role="listbox" aria-labelledby="sourceSelectButton"></div>
-                </div>
-                <button id="searchBtn" class="search-btn">
-                    <i class="fas fa-search"></i>
-                    <span>搜索</span>
-                </button>
-            </div>
+<div class="search-container">
+    <!-- 搜索类型选择按钮 -->
+    <div class="search-type-selector">
+        <button class="search-type-btn active" data-type="default" title="默认搜索">
+            <span>默认</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </button>
+        <div class="search-type-menu" style="display: none;">
+            <button class="search-type-option" data-type="default">默认</button>
+            <button class="search-type-option" data-type="song">单曲</button>
+            <button class="search-type-option" data-type="playlist">歌单</button>
+            <button class="search-type-option" data-type="artist">歌手</button>
+            <button class="search-type-option" data-type="album">专辑</button>
+        </div>
+    </div>
+    
+    <!-- 搜索框 -->
+    <input type="text" id="searchInput" placeholder="搜索歌曲、歌手、专辑...">
+    <button id="searchBtn">搜索</button>
+</div>
+
             <div id="searchResults" class="search-results">
                 <div class="search-results-toolbar">
                     <div class="import-dropdown">
