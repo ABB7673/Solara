@@ -1,3 +1,81 @@
+// ===== API 配置 ===== 
+const API_CONFIG = {
+    // 音乐播放 API
+    musicApis: [
+        {
+            name: '默认 API',
+            baseUrl: 'https://music.gdstudio.xyz',
+            searchUrl: '/search?keywords={keyword}&type={type}',
+            urlApi: '/url?id={id}',
+            timeout: 10000
+        },
+        {
+            name: 'QQ 音乐 API',
+            baseUrl: 'https://api.music.qq.com',
+            searchUrl: '/search?keyword={keyword}&type={type}',
+            urlApi: '/url?id={id}',
+            timeout: 10000
+        },
+        {
+            name: '网易云 API',
+            baseUrl: 'https://netease-cloud-music-api-ruby.vercel.app',
+            searchUrl: '/search?keywords={keyword}&type={type}',
+            urlApi: '/song/url?id={id}',
+            timeout: 10000
+        },
+        {
+            name: '酷狗 API',
+            baseUrl: 'https://music.kugou.com/api',
+            searchUrl: '/search?keyword={keyword}&type={type}',
+            urlApi: '/url?id={id}',
+            timeout: 10000
+        }
+    ],
+    
+    // 歌词 API
+    lyricApis: [
+        {
+            name: '默认歌词 API',
+            baseUrl: 'https://music.gdstudio.xyz',
+            lyricUrl: '/lyric?id={id}',
+            timeout: 8000
+        },
+        {
+            name: 'Lyrics API',
+            baseUrl: 'https://api.lyrics.lol',
+            lyricUrl: '/lyrics/{artist}/{title}',
+            timeout: 8000
+        },
+        {
+            name: '网易云歌词 API',
+            baseUrl: 'https://netease-cloud-music-api-ruby.vercel.app',
+            lyricUrl: '/lyric?id={id}',
+            timeout: 8000
+        },
+        {
+            name: '酷狗歌词 API',
+            baseUrl: 'https://music.kugou.com/api',
+            lyricUrl: '/lyric?id={id}',
+            timeout: 8000
+        }
+    ],
+
+    // 搜索类型映射
+    searchTypeMap: {
+        'default': 1,      // 默认
+        'song': 1,         // 单曲
+        'playlist': 1000,  // 歌单
+        'artist': 100,     // 歌手
+        'album': 10        // 专辑
+    }
+};
+
+// 当前 API 索引
+let currentMusicApiIndex = 0;
+let currentLyricApiIndex = 0;
+let currentSearchType = 'default';
+
+
 const dom = {
     container: document.getElementById("mainContainer"),
     backgroundStage: document.getElementById("backgroundStage"),
@@ -760,161 +838,6 @@ const savedCurrentPlaylist = (() => {
     return playlists.includes(stored) ? stored : "playlist";
 })();
 
-// ====== 多源API备份系统 ======
-const MUSIC_API_SOURCES = [
-    {
-        name: 'GDStudio',
-        baseUrl: 'https://music-api.gdstudio.xyz/api.php',
-        priority: 1,
-        enabled: true
-    },
-    {
-        name: 'NetEaseProxy',
-        baseUrl: 'https://netease-cloud-music-api-psi-seven.vercel.app',
-        priority: 2,
-        enabled: true,
-        // 网易云API格式转换
-        transformSearch: (keyword, page) => `/cloudsearch?keywords=${encodeURIComponent(keyword)}&limit=20&offset=${(page - 1) * 20}`,
-        transformUrl: (id) => `/song/url?id=${id}&br=320000`,
-        transformLyric: (id) => `/lyric?id=${id}`,
-        transformPic: (id) => `/song/detail?ids=${id}`
-    },
-    {
-        name: 'MusicAPI',
-        baseUrl: 'https://api.injahow.cn/meting',
-        priority: 3,
-        enabled: true,
-        transformSearch: (keyword, page) => `/?server=netease&type=search&id=${encodeURIComponent(keyword)}&page=${page}`,
-        transformUrl: (id) => `/?server=netease&type=url&id=${id}&br=320`,
-        transformLyric: (id) => `/?server=netease&type=lrc&id=${id}`
-    },
-    {
-        name: 'QQMusicProxy', 
-        baseUrl: 'https://api.qq.jsososo.com',
-        priority: 4,
-        enabled: true,
-        transformSearch: (keyword) => `/search?key=${encodeURIComponent(keyword)}&pageSize=20`,
-        transformUrl: (id) => `/song/url?id=${id}`,
-        transformLyric: (id) => `/lyric?id=${id}`
-    }
-];
-
-const LYRIC_API_SOURCES = [
-    {
-        name: 'Primary',
-        priority: 1,
-        getLyricUrl: (song) => API.getLyric(song)
-    },
-    {
-        name: 'NetEase',
-        priority: 2,
-        getLyricUrl: (song) => `https://netease-cloud-music-api-psi-seven.vercel.app/lyric?id=${song.id}`
-    },
-    {
-        name: 'QQMusic',
-        priority: 3,
-        getLyricUrl: (song) => `https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?songmid=${song.id}&format=json&nobase64=1`
-    },
-    {
-        name: 'Kugou',
-        priority: 4,
-        getLyricUrl: (song) => `https://api.injahow.cn/meting/?server=netease&type=lrc&id=${song.id}`
-    }
-];
-
-let currentMusicAPIIndex = 0;
-let currentLyricAPIIndex = 0;
-
-// 获取当前音乐API
-function getCurrentMusicAPI() {
-    return MUSIC_API_SOURCES[currentMusicAPIIndex];
-}
-
-// 切换到下一个音乐API
-function switchToNextMusicAPI() {
-    currentMusicAPIIndex = (currentMusicAPIIndex + 1) % MUSIC_API_SOURCES.length;
-    const nextAPI = getCurrentMusicAPI();
-    debugLog(`🔄 音源切换: ${nextAPI.name}`);
-    showNotification(`切换音源: ${nextAPI.name}`, "warning");
-    return nextAPI;
-}
-
-// 获取当前歌词API
-function getCurrentLyricAPI() {
-    return LYRIC_API_SOURCES[currentLyricAPIIndex];
-}
-
-// 切换到下一个歌词API  
-function switchToNextLyricAPI() {
-    currentLyricAPIIndex = (currentLyricAPIIndex + 1) % LYRIC_API_SOURCES.length;
-    const nextAPI = getCurrentLyricAPI();
-    debugLog(`🔄 歌词源切换: ${nextAPI.name}`);
-    return nextAPI;
-}
-
-// 带重试的音频URL获取
-async function getSongUrlWithRetry(song, quality = "320", maxRetries = 4) {
-    let lastError;
-    
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-            const api = getCurrentMusicAPI();
-            debugLog(`🎵 尝试获取音频 (${attempt + 1}/${maxRetries}): ${api.name}`);
-            
-            const audioUrl = API.getSongUrl(song, quality);
-            const audioData = await API.fetchJson(audioUrl);
-            
-            if (audioData && audioData.url) {
-                debugLog(`✅ 音频获取成功: ${api.name}`);
-                return audioData.url;
-            }
-            
-            throw new Error('音频URL为空');
-        } catch (error) {
-            lastError = error;
-            debugLog(`❌ 音频获取失败 (${getCurrentMusicAPI().name}): ${error.message}`);
-            
-            if (attempt < maxRetries - 1) {
-                switchToNextMusicAPI();
-            }
-        }
-    }
-    
-    throw new Error(`所有音源均失败: ${lastError?.message || '未知错误'}`);
-}
-
-// 带重试的歌词加载
-async function loadLyricsWithRetry(song, maxRetries = 4) {
-    let lastError;
-    
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-            const api = getCurrentLyricAPI();
-            debugLog(`📝 尝试加载歌词 (${attempt + 1}/${maxRetries}): ${api.name}`);
-            
-            const lyricUrl = api.getLyricUrl(song);
-            const lyricData = await API.fetchJson(lyricUrl);
-            
-            if (lyricData && lyricData.lyric) {
-                debugLog(`✅ 歌词加载成功: ${api.name}`);
-                return lyricData.lyric;
-            }
-            
-            throw new Error('歌词数据为空');
-        } catch (error) {
-            lastError = error;
-            debugLog(`❌ 歌词加载失败 (${getCurrentLyricAPI().name}): ${error.message}`);
-            
-            if (attempt < maxRetries - 1) {
-                switchToNextLyricAPI();
-            }
-        }
-    }
-    
-    debugLog('⚠️ 所有歌词源均失败，显示无歌词');
-    return null;
-}
-
 // API配置 - 修复API地址和请求方式
 const API = {
     baseUrl: "/proxy",
@@ -1379,6 +1302,56 @@ bootstrapPersistentStorage();
         ];
     }
 
+// ===== 搜索类型选择功能 =====
+function initSearchTypeSelector() {
+    const searchTypeBtn = document.querySelector('.search-type-btn');
+    const searchTypeMenu = document.querySelector('.search-type-menu');
+    const searchTypeOptions = document.querySelectorAll('.search-type-option');
+
+    if (!searchTypeBtn) return;
+
+    // 切换菜单显示
+    searchTypeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        searchTypeMenu.style.display = searchTypeMenu.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // 选择搜索类型
+    searchTypeOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const type = option.getAttribute('data-type');
+            
+            // 更新当前搜索类型
+            currentSearchType = type;
+            
+            // 更新按钮文本
+            const typeText = option.textContent;
+            searchTypeBtn.querySelector('span').textContent = typeText;
+            
+            // 更新活跃状态
+            searchTypeOptions.forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+            
+            // 关闭菜单
+            searchTypeMenu.style.display = 'none';
+            
+            console.log(`✓ 搜索类型已切换为: ${typeText}`);
+        });
+    });
+
+    // 点击其他地方关闭菜单
+    document.addEventListener('click', () => {
+        searchTypeMenu.style.display = 'none';
+    });
+}
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', () => {
+    initSearchTypeSelector();
+});
+
+    
     function updateMediaMetadata() {
         // 依赖现有全局 state.currentSong；已在项目中使用 localStorage 保存/恢复。:contentReference[oaicite:7]{index=7}
         const song = state.currentSong || {};
@@ -3694,19 +3667,174 @@ function updateCurrentSongInfo(song, options = {}) {
 }
 
 // 搜索功能 - 修复搜索下拉框显示问题
-async function performSearch(isLiveSearch = false) {
-    const query = dom.searchInput.value.trim();
-    if (!query) {
-        showNotification("请输入搜索关键词", "error");
+// ===== 改进的搜索函数（支持 API 自动切换）=====
+async function performSearch(keyword, retryCount = 0) {
+    if (!keyword.trim()) {
+        showNotification('请输入搜索关键词', 'warning');
         return;
     }
 
     // 获取搜索类型
-    const searchTypeSelect = document.getElementById('searchTypeSelect');
-    const searchType = searchTypeSelect ? searchTypeSelect.value : '';
+    const searchType = API_CONFIG.searchTypeMap[currentSearchType] || 1;
     
-    // 后续代码保持不变，但在API.search调用时传入searchType参数
-    const results = await API.search(query, source, 20, state.searchPage, searchType);
+    try {
+        showNotification('搜索中...', 'info');
+        
+        const api = API_CONFIG.musicApis[currentMusicApiIndex];
+        console.log(`🔍 使用 API: ${api.name}`);
+
+        // 构建搜索 URL
+        let searchUrl = api.baseUrl + api.searchUrl
+            .replace('{keyword}', encodeURIComponent(keyword))
+            .replace('{type}', searchType);
+
+        // 设置超时
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), api.timeout);
+
+        const response = await fetch(searchUrl, {
+            method: 'GET',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // 处理搜索结果
+        const songs = processMusicData(data, api.name);
+        
+        if (songs && songs.length > 0) {
+            displaySearchResults(songs);
+            showNotification(`✓ 找到 ${songs.length} 首歌曲`, 'success');
+            console.log(`✓ 搜索成功，找到 ${songs.length} 首歌曲`);
+        } else {
+            throw new Error('未找到搜索结果');
+        }
+
+    } catch (error) {
+        console.warn(`✗ API ${currentMusicApiIndex + 1} 搜索失败: ${error.message}`);
+        
+        // 自动切换 API 重试
+        if (currentMusicApiIndex < API_CONFIG.musicApis.length - 1 && retryCount < 3) {
+            currentMusicApiIndex++;
+            console.log(`🔄 自动切换到 API ${currentMusicApiIndex + 1}，重新搜索...`);
+            showNotification(`API 切换中...`, 'info');
+            
+            // 延迟 1 秒后重试
+            setTimeout(() => {
+                performSearch(keyword, retryCount + 1);
+            }, 1000);
+        } else {
+            // 重置 API 索引
+            currentMusicApiIndex = 0;
+            showNotification('所有 API 搜索失败，请检查网络', 'error');
+            console.error('✗ 所有 API 都搜索失败');
+        }
+    }
+}
+
+// 处理不同 API 的数据格式
+function processMusicData(data, apiName) {
+    try {
+        let songs = [];
+
+        if (apiName.includes('默认')) {
+            // 默认 API 格式
+            songs = data.data || data.songs || [];
+        } else if (apiName.includes('QQ')) {
+            // QQ 音乐格式
+            songs = data.data?.song?.list || data.data || [];
+        } else if (apiName.includes('网易')) {
+            // 网易云格式
+            songs = data.result?.songs || data.songs || [];
+        } else if (apiName.includes('酷狗')) {
+            // 酷狗格式
+            songs = data.data?.info || data.data || [];
+        }
+
+        return Array.isArray(songs) ? songs : [];
+    } catch (error) {
+        console.error('数据处理错误:', error);
+        return [];
+    }
+}
+
+// 显示搜索结果
+function displaySearchResults(songs) {
+    const searchResultsList = document.getElementById('searchResultsList');
+    if (!searchResultsList) return;
+
+    searchResultsList.innerHTML = '';
+
+    songs.forEach((song, index) => {
+        const songItem = createSongItem(song, index);
+        searchResultsList.appendChild(songItem);
+    });
+}
+
+// 创建歌曲项
+function createSongItem(song, index) {
+    const item = document.createElement('div');
+    item.className = 'search-result-item';
+    
+    const title = song.name || song.title || '未知歌曲';
+    const artist = song.artist?.name || song.artist || song.singer || '未知艺术家';
+    const id = song.id || song.mid || index;
+
+    item.innerHTML = `
+        <div class="song-info">
+            <div class="song-title">${title}</div>
+            <div class="song-artist">${artist}</div>
+        </div>
+        <button class="play-song-btn" data-id="${id}" data-title="${title}" data-artist="${artist}">
+            播放
+        </button>
+    `;
+
+    item.querySelector('.play-song-btn').addEventListener('click', () => {
+        playSongFromSearch(id, title, artist);
+    });
+
+    return item;
+}
+
+// 从搜索结果播放歌曲
+async function playSongFromSearch(songId, title, artist) {
+    try {
+        showNotification('获取播放链接中...', 'info');
+        
+        const playUrl = await getPlayUrl(songId);
+        
+        if (playUrl) {
+            // 播放歌曲
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.src = playUrl;
+            audioPlayer.play();
+            
+            // 更新歌曲信息
+            updateNowPlaying(title, artist);
+            
+            // 获取歌词
+            getLyrics(songId);
+            
+            showNotification(`正在播放: ${title}`, 'success');
+        } else {
+            throw new Error('无法获取播放链接');
+        }
+    } catch (error) {
+        showNotification('播放失败，请重试', 'error');
+        console.error('播放错误:', error);
+    }
+}
+
 
     if (state.sourceMenuOpen) {
         closeSourceMenu();
@@ -3832,6 +3960,166 @@ async function loadMoreResults() {
         }
     }
 }
+
+// ===== 获取播放链接（支持 API 自动切换）=====
+async function getPlayUrl(songId, retryCount = 0) {
+    try {
+        const api = API_CONFIG.musicApis[currentMusicApiIndex];
+        
+        let urlApiPath = api.urlApi.replace('{id}', songId);
+        let playUrl = api.baseUrl + urlApiPath;
+
+        console.log(`🎵 从 ${api.name} 获取播放链接...`);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), api.timeout);
+
+        const response = await fetch(playUrl, {
+            method: 'GET',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // 提取播放链接
+        let url = data.url || data.data?.url || data.data || '';
+
+        if (url) {
+            console.log(`✓ 成功获取播放链接`);
+            return url;
+        } else {
+            throw new Error('播放链接为空');
+        }
+
+    } catch (error) {
+        console.warn(`✗ 从 API ${currentMusicApiIndex + 1} 获取播放链接失败: ${error.message}`);
+
+        // 自动切换 API 重试
+        if (currentMusicApiIndex < API_CONFIG.musicApis.length - 1 && retryCount < 3) {
+            currentMusicApiIndex++;
+            console.log(`🔄 自动切换到 API ${currentMusicApiIndex + 1}...`);
+            
+            // 延迟 500ms 后重试
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return getPlayUrl(songId, retryCount + 1);
+        } else {
+            // 重置 API 索引
+            currentMusicApiIndex = 0;
+            console.error('✗ 所有 API 都获取播放链接失败');
+            return null;
+        }
+    }
+}
+
+// ===== 获取歌词（支持 API 自动切换）=====
+async function getLyrics(songId, title = '', artist = '', retryCount = 0) {
+    try {
+        const lyricApi = API_CONFIG.lyricApis[currentLyricApiIndex];
+        
+        console.log(`📝 从 ${lyricApi.name} 获取歌词...`);
+
+        let lyricUrl = lyricApi.baseUrl + lyricApi.lyricUrl;
+        
+        // 处理不同 API 的 URL 格式
+        if (lyricApi.name.includes('Lyrics')) {
+            lyricUrl = lyricUrl
+                .replace('{artist}', encodeURIComponent(artist))
+                .replace('{title}', encodeURIComponent(title));
+        } else {
+            lyricUrl = lyricUrl.replace('{id}', songId);
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), lyricApi.timeout);
+
+        const response = await fetch(lyricUrl, {
+            method: 'GET',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // 提取歌词
+        let lyrics = data.lrc || data.lyrics || data.data?.lrc || '';
+
+        if (lyrics) {
+            console.log(`✓ 成功获取歌词`);
+            displayLyrics(lyrics);
+            return lyrics;
+        } else {
+            throw new Error('歌词为空');
+        }
+
+    } catch (error) {
+        console.warn(`✗ 从 API ${currentLyricApiIndex + 1} 获取歌词失败: ${error.message}`);
+
+        // 自动切换 API 重试
+        if (currentLyricApiIndex < API_CONFIG.lyricApis.length - 1 && retryCount < 3) {
+            currentLyricApiIndex++;
+            console.log(`🔄 自动切换到歌词 API ${currentLyricApiIndex + 1}...`);
+            
+            // 延迟 500ms 后重试
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return getLyrics(songId, title, artist, retryCount + 1);
+        } else {
+            // 重置 API 索引
+            currentLyricApiIndex = 0;
+            console.warn('✗ 所有歌词 API 都获取失败，显示默认歌词');
+            displayLyrics('暂无歌词');
+            return null;
+        }
+    }
+}
+
+// 显示歌词
+function displayLyrics(lyrics) {
+    const lyricsContent = document.getElementById('lyricsContent');
+    if (lyricsContent) {
+        lyricsContent.textContent = lyrics;
+    }
+}
+
+// 更新正在播放的歌曲信息
+function updateNowPlaying(title, artist) {
+    const nowPlayingTitle = document.querySelector('.now-playing-title');
+    const nowPlayingArtist = document.querySelector('.now-playing-artist');
+    
+    if (nowPlayingTitle) nowPlayingTitle.textContent = title;
+    if (nowPlayingArtist) nowPlayingArtist.textContent = artist;
+}
+
+// 显示通知
+function showNotification(message, type = 'info') {
+    const notification = document.getElementById('notification');
+    if (!notification) return;
+
+    notification.textContent = message;
+    notification.className = `notification ${type}`;
+    notification.style.display = 'block';
+
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 3000);
+}
+
 
 function createSearchResultItem(song, index) {
     const item = document.createElement("div");
@@ -5359,22 +5647,6 @@ function waitForAudioReady(player) {
 }
 
 async function playSong(song, options = {}) {
-    async function playSong(song, options = {}) {
-    // ... 前面代码保持不变 ...
-    
-    try {
-        updateCurrentSongInfo(song, { loadArtwork: false });
-
-        // 使用带重试的音频获取
-        const originalAudioUrl = await getSongUrlWithRetry(song, quality);
-        
-        // ... 后续代码保持不变 ...
-    } catch (error) {
-        console.error('播放歌曲失败:', error);
-        showNotification('所有音源均播放失败，请稍后重试', 'error');
-        throw error;
-    }
-}
     const { autoplay = true, startTime = 0, preserveProgress = false } = options;
 
     window.clearTimeout(pendingPaletteTimer);
@@ -5871,13 +6143,13 @@ async function exploreOnlineMusic() {
 // 修复：加载歌词
 async function loadLyrics(song) {
     try {
-        debugLog(`获取歌词URL: ${song.name}`);
+        const lyricUrl = API.getLyric(song);
+        debugLog(`获取歌词URL: ${lyricUrl}`);
 
-        // 使用带重试的歌词加载
-        const lyricText = await loadLyricsWithRetry(song);
-        
-        if (lyricText) {
-            parseLyrics(lyricText);
+        const lyricData = await API.fetchJson(lyricUrl);
+
+        if (lyricData && lyricData.lyric) {
+            parseLyrics(lyricData.lyric);
             dom.lyrics.classList.remove("empty");
             dom.lyrics.dataset.placeholder = "default";
             debugLog(`歌词加载成功: ${state.lyricsData.length} 行`);
@@ -5887,6 +6159,7 @@ async function loadLyrics(song) {
             dom.lyrics.dataset.placeholder = "message";
             state.lyricsData = [];
             state.currentLyricLine = -1;
+            debugLog("歌词加载失败: 无歌词数据");
         }
     } catch (error) {
         console.error("加载歌词失败:", error);
@@ -5895,6 +6168,7 @@ async function loadLyrics(song) {
         dom.lyrics.dataset.placeholder = "message";
         state.lyricsData = [];
         state.currentLyricLine = -1;
+        debugLog(`歌词加载失败: ${error}`);
     }
 }
 
