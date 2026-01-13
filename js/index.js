@@ -1,3 +1,94 @@
+// ===== API 配置 ===== 
+const API_CONFIG = {
+    // 音乐播放 API
+    musicApis: [
+        {
+            name: '默认 API',
+            baseUrl: 'https://music.gdstudio.xyz',
+            searchUrl: '/search?keywords={keyword}&type={type}',
+            urlApi: '/url?id={id}',
+            timeout: 10000
+        },
+        {
+            name: 'QQ 音乐 API',
+            baseUrl: 'https://https://api.i-meto.com/meting/api',
+            searchUrl: '/search?keyword={keyword}&type={type}',
+            urlApi: '/url?id={id}',
+            timeout: 10000
+        },
+        {
+            name: '网易云 API',
+            baseUrl: 'https://api.injahow.cn/meting/',
+            searchUrl: '/search?keywords={keyword}&type={type}',
+            urlApi: '/song/url?id={id}',
+            timeout: 10000
+        },
+        {
+            name: '网易云 API2',
+            baseUrl: 'https://api.paugram.com/meting/',
+            searchUrl: '/search?keywords={keyword}&type={type}',
+            urlApi: '/song/url?id={id}',
+            timeout: 10000
+        },
+        {
+            name: '酷狗 API',
+            baseUrl: 'https://music.cyrilstudio.top/api',
+            searchUrl: '/search?keyword={keyword}&type={type}',
+            urlApi: '/url?id={id}',
+            timeout: 10000
+        }
+    ],
+    
+    // 歌词 API
+    lyricApis: [
+        {
+            name: '默认歌词 API',
+            baseUrl: 'https://music.gdstudio.xyz',
+            lyricUrl: '/lyric?id={id}',
+            timeout: 8000
+        },
+        {
+            name: 'Lyrics API',
+            baseUrl: 'https://api.lyrics.lol',
+            lyricUrl: '/lyrics/{artist}/{title}',
+            timeout: 8000
+        },
+        {
+            name: '网易云歌词 API',
+            baseUrl: 'https://api.i-meto.com/meting/api',
+            lyricUrl: '/lyric?id={id}',
+            timeout: 8000
+        },
+        {
+            name: '网易云2歌词 API',
+            baseUrl: 'https://api.paugram.com/meting/',
+            lyricUrl: '/lyric?id={id}',
+            timeout: 8000
+        },
+        {
+            name: '酷狗歌词 API',
+            baseUrl: 'https://api.injahow.cn/meting/',
+            lyricUrl: '/lyric?id={id}',
+            timeout: 8000
+        }
+    ],
+
+    // 搜索类型映射
+    searchTypeMap: {
+        'default': 1,      // 默认
+        'song': 1,         // 单曲
+        'playlist': 1000,  // 歌单
+        'artist': 100,     // 歌手
+        'album': 10        // 专辑
+    }
+};
+
+// 当前 API 索引
+let currentMusicApiIndex = 0;
+let currentLyricApiIndex = 0;
+let currentSearchType = 'default';
+
+
 const dom = {
     container: document.getElementById("mainContainer"),
     backgroundStage: document.getElementById("backgroundStage"),
