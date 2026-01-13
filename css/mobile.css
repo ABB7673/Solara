@@ -207,25 +207,6 @@ body.mobile-view .mobile-turntable__platter::before {
     pointer-events: none;
 }
 
-/* 移动端搜索类型选择器 */
-@media (max-width: 768px) {
-    body.mobile-view .search-container {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 10px;
-    }
-    
-    body.mobile-view .search-type-wrapper {
-        grid-column: 1 / -1;
-        margin-right: 0;
-    }
-    
-    body.mobile-view .search-type-select {
-        width: 100%;
-        min-width: auto;
-    }
-}
-
 body.mobile-view .album-cover {
     position: absolute;
     top: 50%;
@@ -958,31 +939,3 @@ body.mobile-view #notification.show {
 body.mobile-view .debug-info {
     display: none;
 }
-
-/* ===== 移动端搜索类型选择器 ===== */
-@media (max-width: 768px) {
-    .search-type-btn {
-        padding: 6px 10px;
-        font-size: 12px;
-    }
-
-    .search-type-btn span {
-        max-width: 60px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .search-type-menu {
-        min-width: 80px;
-    }
-
-    .search-type-option {
-        padding: 8px 10px;
-        font-size: 12px;
-    }
-
-    .search-container {
-        gap: 6px;
-    }
-}
-
