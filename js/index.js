@@ -1061,3 +1061,60 @@ function applyPersistentSnapshotFromRemote(data) {
     }
     if (typeof data.currentList === "string") {
         state.currentList = data.currentList === "favorite"
+
+        state.currentList = data.currentList === "favorite" ? "favorite" : "playlist";
+        safeSetLocalStorage("currentList", state.currentList, { skipRemote: true });
+    }
+    if (typeof data.currentSong === "string") {
+        const song = parseJSON(data.currentSong, null);
+        if (song && typeof song === "object") {
+            state.currentSong = song;
+            safeSetLocalStorage("currentSong", data.currentSong, { skipRemote: true });
+        }
+    }
+    if (typeof data.currentPlaybackTime === "string") {
+        const time = Number.parseFloat(data.currentPlaybackTime);
+        if (Number.isFinite(time) && time >= 0) {
+            state.currentPlaybackTime = time;
+            safeSetLocalStorage("currentPlaybackTime", String(time), { skipRemote: true });
+        }
+    }
+    if (typeof data.favoriteSongs === "string") {
+        const favorites = parseJSON(data.favoriteSongs, []);
+        if (Array.isArray(favorites)) {
+            state.favoriteSongs = favorites;
+            safeSetLocalStorage("favoriteSongs", data.favoriteSongs, { skipRemote: true });
+        }
+    }
+    if (typeof data.currentFavoriteIndex === "string") {
+        const index = Number.parseInt(data.currentFavoriteIndex, 10);
+        if (Number.isInteger(index) && index >= 0) {
+            state.currentFavoriteIndex = index;
+            safeSetLocalStorage("currentFavoriteIndex", String(index), { skipRemote: true });
+        }
+    }
+    if (typeof data.favoritePlayMode === "string") {
+        state.favoritePlayMode = ["list", "single", "random"].includes(data.favoritePlayMode) ? data.favoritePlayMode : state.favoritePlayMode;
+        safeSetLocalStorage("favoritePlayMode", state.favoritePlayMode, { skipRemote: true });
+    }
+    if (typeof data.favoritePlaybackTime === "string") {
+        const time = Number.parseFloat(data.favoritePlaybackTime);
+        if (Number.isFinite(time) && time >= 0) {
+            state.favoritePlaybackTime = time;
+            safeSetLocalStorage("favoritePlaybackTime", String(time), { skipRemote: true });
+        }
+    }
+    if (typeof data.searchSource === "string") {
+        state.searchSource = normalizeSource(data.searchSource);
+        safeSetLocalStorage("searchSource", state.searchSource, { skipRemote: true });
+    }
+    if (typeof data.searchType === "string") {
+        state.searchType = normalizeSearchType(data.searchType);
+        safeSetLocalStorage("searchType", state.searchType, { skipRemote: true });
+    }
+    if (playlistUpdated) {
+        renderPlaylist();
+    }
+}
+
+    
