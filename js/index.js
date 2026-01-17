@@ -3646,10 +3646,7 @@ async function performSearch(isLiveSearch = false) {
         showNotification("请输入搜索关键词", "error");
         return;
     }
-
-    // ... 中间的代码保持不变 ...
-
-    let lastError = null;
+et lastError = null;
     let results = null;
 
     // 尝试多个 API 源
@@ -3705,6 +3702,80 @@ async function performSearch(isLiveSearch = false) {
         hideSearchResults();
         debugLog(`搜索失败: ${error.message}`);
     } finally {
+        dom.searchBtn.disabled = false;
+        dom.searchBtn.innerHTML = '<i class="fas fa-search"></i><span>搜索</span>';
+    }
+}
+    if (state.sourceMenuOpen) {
+        closeSourceMenu();
+    }
+
+    const source = normalizeSource(state.searchSource);
+    state.searchSource = source;
+    safeSetLocalStorage("searchSource", source);
+    updateSourceLabel();
+    buildSourceMenu();
+
+    // 重置搜索状态
+    if (!isLiveSearch) {
+        state.searchPage = 1;
+        state.searchKeyword = query;
+        state.searchSource = source;
+        state.searchResults = [];
+        state.hasMoreResults = true;
+        state.renderedSearchCount = 0;
+        resetSelectedSearchResults();
+        const listContainer = dom.searchResultsList || dom.searchResults;
+        if (listContainer) {
+            listContainer.innerHTML = "";
+        }
+        debugLog(`开始新搜索: ${query}, 来源: ${source}`);
+    } else {
+        state.searchKeyword = query;
+        state.searchSource = source;
+    }
+
+    try {
+        // 禁用搜索按钮并显示加载状态
+        dom.searchBtn.disabled = true;
+        dom.searchBtn.innerHTML = '<span class="loader"></span><span>搜索中...</span>';
+
+        // 立即显示搜索模式
+        showSearchResults();
+        debugLog("已切换到搜索模式");
+
+        // 执行搜索
+        const results = await API.search(query, source, 20, state.searchPage);
+        debugLog(`API返回结果数量: ${results.length}`);
+
+        if (state.searchPage === 1) {
+            state.searchResults = results;
+        } else {
+            state.searchResults = [...state.searchResults, ...results];
+        }
+
+        state.hasMoreResults = results.length === 20;
+
+        // 显示搜索结果
+        displaySearchResults(results, {
+            reset: state.searchPage === 1,
+            totalCount: state.searchResults.length,
+        });
+        persistLastSearchState();
+        debugLog(`搜索完成: 总共显示 ${state.searchResults.length} 个结果`);
+
+        // 如果没有结果，显示提示
+        if (state.searchResults.length === 0) {
+            showNotification("未找到相关歌曲", "error");
+        }
+
+    } catch (error) {
+        console.error("搜索失败:", error);
+        showNotification("搜索失败，请稍后重试", "error");
+        hideSearchResults();
+        debugLog(`搜索失败: ${error.message}`);
+    } finally {
+        // 恢复搜索按钮状态
         dom.searchBtn.disabled = false;
         dom.searchBtn.innerHTML = '<i class="fas fa-search"></i><span>搜索</span>';
     }
