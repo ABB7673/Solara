@@ -1,12 +1,3 @@
-// 添加搜索类型选项
-const SEARCH_TYPE_OPTIONS = [
-  { value: "all", label: "综合" },
-  { value: "playlist", label: "歌单" },
-  { value: "artist", label: "歌手" },
-  { value: "song", label: "单曲" },
-  { value: "album", label: "专辑" }
-];
-
 const dom = {
     container: document.getElementById("mainContainer"),
     backgroundStage: document.getElementById("backgroundStage"),
@@ -771,19 +762,6 @@ const savedCurrentPlaylist = (() => {
 
 // API配置 - 修复API地址和请求方式
 const API = {
-
-    // 修改API对象，添加backupUrls
-const API = {
-  baseUrl: "/proxy",
-  backupUrls: [
-    "https://api.i-meto.com/meting/api",
-    "https://api.injahow.cn/meting/",
-    "https://api.paugram.com/meting/",
-    "https://music.cyrilstudio.top/api"
-  ],
-  // ...其他代码
-};
-
     baseUrl: "/proxy",
 
     generateSignature: () => {
@@ -817,8 +795,7 @@ const API = {
 
     search: async (keyword, source = "netease", count = 20, page = 1) => {
         const signature = API.generateSignature();
-        const type = state.searchType; // 获取当前搜索类型
-  const url = `${API.baseUrl}?types=search&type=${type}&source=${source}&name=${encodeURIComponent(keyword)}&count=${count}&pages=${page}&s=${signature}`;
+        const url = `${API.baseUrl}?types=search&source=${source}&name=${encodeURIComponent(keyword)}&count=${count}&pages=${page}&s=${signature}`;
 
         try {
             debugLog(`API请求: ${url}`);
@@ -896,42 +873,25 @@ const API = {
         }
     },
 
-// 修改getSongUrl函数，添加备用API逻辑
-getSongUrl: async (song, quality = "320") => {
-  const signature = API.generateSignature();
-  let url = `${API.baseUrl}?types=url&id=${song.id}&source=${song.source || "netease"}&br=${quality}&s=${signature}`;
-  
-  // 尝试默认API
-  try {
-    const response = await fetch(url);
-    if (response.ok) {
-      return url;
+    getSongUrl: (song, quality = "320") => {
+        const signature = API.generateSignature();
+        return `${API.baseUrl}?types=url&id=${song.id}&source=${song.source || "netease"}&br=${quality}&s=${signature}`;
+    },
+
+    getLyric: (song) => {
+        const signature = API.generateSignature();
+        return `${API.baseUrl}?types=lyric&id=${song.lyric_id || song.id}&source=${song.source || "netease"}&s=${signature}`;
+    },
+
+    getPicUrl: (song) => {
+        const signature = API.generateSignature();
+        return `${API.baseUrl}?types=pic&id=${song.pic_id}&source=${song.source || "netease"}&size=300&s=${signature}`;
     }
-  } catch (error) {
-    console.error("默认API失败，尝试备用API", error);
-  }
-  
-  // 尝试备用API
-  for (const backupUrl of API.backupUrls) {
-    url = `${backupUrl}?types=url&id=${song.id}&source=${song.source || "netease"}&br=${quality}&s=${signature}`;
-    try {
-      const response = await fetch(url);
-      if (response.ok) {
-        return url;
-      }
-    } catch (error) {
-      console.error("备用API失败", error);
-    }
-  }
-  
-  throw new Error("所有API都失败了");
-},
+};
 
 Object.freeze(API);
 
 const state = {
-    searchType: "all"
-    theme: "default"
     onlineSongs: [],
     searchResults: cloneSearchResults(savedLastSearchState?.results) || [],
     renderedSearchCount: 0,
@@ -2002,35 +1962,6 @@ function debugLog(message) {
 
 // 启用调试模式（按Ctrl+D）
 document.addEventListener("keydown", (e) => {
-    // 添加搜索类型处理
-document.addEventListener('DOMContentLoaded', function() {
-  // 搜索类型按钮处理
-  const searchTypeButtons = document.querySelectorAll('.search-type-btn');
-  searchTypeButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      searchTypeButtons.forEach(btn => btn.classList.remove('active'));
-      this.classList.add('active');
-      const type = this.getAttribute('data-type');
-      state.searchType = type;
-    });
-  });
-  
-  // 主题切换按钮处理
-  const themeToggleBtn = document.getElementById('themeToggleBtn');
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', function() {
-      if (state.theme === "default") {
-        document.body.classList.add('white-theme');
-        state.theme = "white";
-      } else {
-        document.body.classList.remove('white-theme');
-        state.theme = "default";
-      }
-      savePlayerState();
-    });
-  }
-});
-
     if (e.ctrlKey && e.key === "d") {
         e.preventDefault();
         state.debugMode = !state.debugMode;
@@ -5759,43 +5690,37 @@ async function exploreOnlineMusic() {
     }
 }
 
-// 修改getLyric函数，添加备用API逻辑
-getLyric: async (song) => {
-  const signature = API.generateSignature();
-  let url = `${API.baseUrl}?types=lyric&id=${song.lyric_id || song.id}&source=${song.source || "netease"}&s=${signature}`;
-  
-  // 尝试默认API
-  try {
-    const response = await fetch(url);
-    if (response.ok) {
-      return url;
-    }
-  } catch (error) {
-    console.error("默认歌词API失败，尝试备用API", error);
-  }
-  
-  // 尝试备用API
-  const lyricBackupUrls = [
-    "https://api.lyrics.lol",
-    "https://api.i-meto.com/meting/api",
-    "https://api.paugram.com/meting/",
-    "https://api.injahow.cn/meting/"
-  ];
-  
-  for (const backupUrl of lyricBackupUrls) {
-    url = `${backupUrl}?types=lyric&id=${song.lyric_id || song.id}&source=${song.source || "netease"}&s=${signature}`;
+// 修复：加载歌词
+async function loadLyrics(song) {
     try {
-      const response = await fetch(url);
-      if (response.ok) {
-        return url;
-      }
+        const lyricUrl = API.getLyric(song);
+        debugLog(`获取歌词URL: ${lyricUrl}`);
+
+        const lyricData = await API.fetchJson(lyricUrl);
+
+        if (lyricData && lyricData.lyric) {
+            parseLyrics(lyricData.lyric);
+            dom.lyrics.classList.remove("empty");
+            dom.lyrics.dataset.placeholder = "default";
+            debugLog(`歌词加载成功: ${state.lyricsData.length} 行`);
+        } else {
+            setLyricsContentHtml("<div>暂无歌词</div>");
+            dom.lyrics.classList.add("empty");
+            dom.lyrics.dataset.placeholder = "message";
+            state.lyricsData = [];
+            state.currentLyricLine = -1;
+            debugLog("歌词加载失败: 无歌词数据");
+        }
     } catch (error) {
-      console.error("备用歌词API失败", error);
+        console.error("加载歌词失败:", error);
+        setLyricsContentHtml("<div>歌词加载失败</div>");
+        dom.lyrics.classList.add("empty");
+        dom.lyrics.dataset.placeholder = "message";
+        state.lyricsData = [];
+        state.currentLyricLine = -1;
+        debugLog(`歌词加载失败: ${error}`);
     }
-  }
-  
-  throw new Error("所有歌词API都失败了");
-},
+}
 
 // 修复：解析歌词
 function parseLyrics(lyricText) {
