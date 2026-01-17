@@ -82,3 +82,12 @@ html.desktop-view .search-results-toolbar .import-selected-btn {
 html.desktop-view .search-results-list {
     padding-top: 60px;
 }
+
+/* 白底黑字主题适配 */
+.white-theme {
+  /* 保持与style.css中的设置一致 */
+}
+
+.white-theme .search-type-options .search-type-btn {
+  /* 保持与style.css中的设置一致 */
+}
