@@ -761,8 +761,54 @@ const savedCurrentPlaylist = (() => {
 })();
 
 // API配置 - 修复API地址和请求方式
+// API 音源配置 - 添加多个备用源
+const API_SOURCES = [
+    "https://music.gdstudio.xyz",           // 默认源
+    "https://api.i-meto.com/meting/api",    // 备用源1
+    "https://api.injahow.cn/meting",        // 备用源2
+    "https://api.paugram.com/meting",       // 备用源3
+    "https://music.cyrilstudio.top/api"     // 备用源4
+];
+
+// 歌词 API 配置
+const LYRICS_SOURCES = [
+    "https://music.gdstudio.xyz",           // 默认源
+    "https://api.lyrics.lol",               // 备用源1
+    "https://api.i-meto.com/meting/api",    // 备用源2
+    "https://api.paugram.com/meting",       // 备用源3
+    "https://api.injahow.cn/meting"         // 备用源4
+];
+
+// 当前使用的 API 源索引
+let currentApiSourceIndex = 0;
+let currentLyricsSourceIndex = 0;
+
+// 获取当前 API 源
+function getCurrentApiSource() {
+    return API_SOURCES[currentApiSourceIndex] || API_SOURCES[0];
+}
+
+// 获取当前歌词源
+function getCurrentLyricsSource() {
+    return LYRICS_SOURCES[currentLyricsSourceIndex] || LYRICS_SOURCES[0];
+}
+
+// 切换到下一个 API 源
+function switchToNextApiSource() {
+    currentApiSourceIndex = (currentApiSourceIndex + 1) % API_SOURCES.length;
+    console.log(`已切换到 API 源: ${getCurrentApiSource()}`);
+    showNotification(`已切换到备用音源 ${currentApiSourceIndex}`, "info");
+}
+
+// 切换到下一个歌词源
+function switchToNextLyricsSource() {
+    currentLyricsSourceIndex = (currentLyricsSourceIndex + 1) % LYRICS_SOURCES.length;
+    console.log(`已切换到歌词源: ${getCurrentLyricsSource()}`);
+    showNotification(`已切换到备用歌词源 ${currentLyricsSourceIndex}`, "info");
+}
+
 const API = {
-    baseUrl: "/proxy",
+    baseUrl: getCurrentApiSource(),  // 改为动态获取
 
     generateSignature: () => {
         return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -792,6 +838,61 @@ const API = {
             throw error;
         }
     },
+
+    search: async (keyword, source = "netease", count = 20, page = 1) => {
+        const signature = API.generateSignature();
+        const baseUrl = getCurrentApiSource();
+        const url = `${baseUrl}?types=search&source=${source}&name=${encodeURIComponent(keyword)}&count=${count}&pages=${page}&s=${signature}`;
+
+        try {
+            debugLog(`API 请求: ${url}`);
+            const data = await API.fetchJson(url);
+            debugLog(`API 响应: ${JSON.stringify(data).substring(0, 200)}...`);
+
+            if (!Array.isArray(data)) {
+                throw new Error("搜索结果格式错误");
+            }
+
+            return data.map(song => ({
+                id: song.id,
+                name: song.name,
+                artist: song.artist,
+                album: song.album,
+                pic_id: song.pic_id,
+                url_id: song.url_id,
+                lyric_id: song.lyric_id,
+                source: song.source,
+            }));
+        } catch (error) {
+            console.error(`API 错误: ${error.message}`);
+            debugLog(`API 错误: ${error.message}`);
+            
+            // 失败时切换到下一个源
+            switchToNextApiSource();
+            throw error;
+        }
+    },
+
+    // ... 其他方法保持不变 ...
+
+    getSongUrl: (song, quality = "320") => {
+        const signature = API.generateSignature();
+        const baseUrl = getCurrentApiSource();
+        return `${baseUrl}?types=url&id=${song.id}&source=${song.source || "netease"}&br=${quality}&s=${signature}`;
+    },
+
+    getLyric: (song) => {
+        const signature = API.generateSignature();
+        const baseUrl = getCurrentLyricsSource();  // 使用歌词源
+        return `${baseUrl}?types=lyric&id=${song.lyric_id || song.id}&source=${song.source || "netease"}&s=${signature}`;
+    },
+
+    getPicUrl: (song) => {
+        const signature = API.generateSignature();
+        const baseUrl = getCurrentApiSource();
+        return `${baseUrl}?types=pic&id=${song.pic_id}&source=${song.source || "netease"}&size=300&s=${signature}`;
+    }
+};
 
     search: async (keyword, source = "netease", count = 20, page = 1) => {
         const signature = API.generateSignature();
@@ -3546,47 +3647,39 @@ async function performSearch(isLiveSearch = false) {
         return;
     }
 
-    if (state.sourceMenuOpen) {
-        closeSourceMenu();
-    }
+    // ... 中间的代码保持不变 ...
 
-    const source = normalizeSource(state.searchSource);
-    state.searchSource = source;
-    safeSetLocalStorage("searchSource", source);
-    updateSourceLabel();
-    buildSourceMenu();
+    let lastError = null;
+    let results = null;
 
-    // 重置搜索状态
-    if (!isLiveSearch) {
-        state.searchPage = 1;
-        state.searchKeyword = query;
-        state.searchSource = source;
-        state.searchResults = [];
-        state.hasMoreResults = true;
-        state.renderedSearchCount = 0;
-        resetSelectedSearchResults();
-        const listContainer = dom.searchResultsList || dom.searchResults;
-        if (listContainer) {
-            listContainer.innerHTML = "";
+    // 尝试多个 API 源
+    for (let attempt = 0; attempt < API_SOURCES.length; attempt++) {
+        try {
+            dom.searchBtn.disabled = true;
+            dom.searchBtn.innerHTML = '<span class="loader"></span><span>搜索中...</span>';
+
+            showSearchResults();
+            debugLog("已切换到搜索模式");
+
+            results = await API.search(query, source, 20, state.searchPage);
+            debugLog(`API返回结果数量: ${results.length}`);
+            break; // 成功则跳出循环
+        } catch (error) {
+            lastError = error;
+            console.error(`API 源 ${currentApiSourceIndex} 搜索失败:`, error);
+            debugLog(`API 源 ${currentApiSourceIndex} 搜索失败: ${error.message}`);
+            
+            // 如果还有其他源，切换到下一个
+            if (attempt < API_SOURCES.length - 1) {
+                switchToNextApiSource();
+            }
         }
-        debugLog(`开始新搜索: ${query}, 来源: ${source}`);
-    } else {
-        state.searchKeyword = query;
-        state.searchSource = source;
     }
 
     try {
-        // 禁用搜索按钮并显示加载状态
-        dom.searchBtn.disabled = true;
-        dom.searchBtn.innerHTML = '<span class="loader"></span><span>搜索中...</span>';
-
-        // 立即显示搜索模式
-        showSearchResults();
-        debugLog("已切换到搜索模式");
-
-        // 执行搜索
-        const results = await API.search(query, source, 20, state.searchPage);
-        debugLog(`API返回结果数量: ${results.length}`);
+        if (!results) {
+            throw lastError || new Error("所有 API 源均无法访问");
+        }
 
         if (state.searchPage === 1) {
             state.searchResults = results;
@@ -3596,7 +3689,6 @@ async function performSearch(isLiveSearch = false) {
 
         state.hasMoreResults = results.length === 20;
 
-        // 显示搜索结果
         displaySearchResults(results, {
             reset: state.searchPage === 1,
             totalCount: state.searchResults.length,
@@ -3604,18 +3696,15 @@ async function performSearch(isLiveSearch = false) {
         persistLastSearchState();
         debugLog(`搜索完成: 总共显示 ${state.searchResults.length} 个结果`);
 
-        // 如果没有结果，显示提示
         if (state.searchResults.length === 0) {
             showNotification("未找到相关歌曲", "error");
         }
-
     } catch (error) {
         console.error("搜索失败:", error);
-        showNotification("搜索失败，请稍后重试", "error");
+        showNotification("搜索失败，已尝试所有音源，请稍后重试", "error");
         hideSearchResults();
         debugLog(`搜索失败: ${error.message}`);
     } finally {
-        // 恢复搜索按钮状态
         dom.searchBtn.disabled = false;
         dom.searchBtn.innerHTML = '<i class="fas fa-search"></i><span>搜索</span>';
     }
@@ -5210,6 +5299,51 @@ async function playSong(song, options = {}) {
         updateCurrentSongInfo(song, { loadArtwork: false });
 
         const quality = state.playbackQuality || '320';
+        let audioData = null;
+        let lastError = null;
+
+        // 尝试多个 API 源获取音频 URL
+        for (let attempt = 0; attempt < API_SOURCES.length; attempt++) {
+            try {
+                const audioUrl = API.getSongUrl(song, quality);
+                debugLog(`尝试获取音频URL (源 ${currentApiSourceIndex}): ${audioUrl}`);
+
+                audioData = await API.fetchJson(audioUrl);
+
+                if (audioData && audioData.url) {
+                    debugLog(`成功获取音频URL: ${audioData.url}`);
+                    break; // 成功则跳出循环
+                } else {
+                    throw new Error('无法获取音频播放地址');
+                }
+            } catch (error) {
+                lastError = error;
+                console.warn(`API 源 ${currentApiSourceIndex} 获取失败:`, error);
+                debugLog(`API 源 ${currentApiSourceIndex} 获取失败: ${error.message}`);
+
+                if (attempt < API_SOURCES.length - 1) {
+                    switchToNextApiSource();
+                }
+            }
+        }
+
+        if (!audioData || !audioData.url) {
+            throw lastError || new Error('所有 API 源均无法获取音频地址');
+        }
+
+        // ... 后面的代码保持不变 ...
+    } catch (error) {
+        console.error('播放歌曲失败:', error);
+        throw error;
+    } finally {
+        savePlayerState();
+    }
+}
+
+    try {
+        updateCurrentSongInfo(song, { loadArtwork: false });
+
+        const quality = state.playbackQuality || '320';
         const audioUrl = API.getSongUrl(song, quality);
         debugLog(`获取音频URL: ${audioUrl}`);
 
@@ -5692,34 +5826,45 @@ async function exploreOnlineMusic() {
 
 // 修复：加载歌词
 async function loadLyrics(song) {
-    try {
-        const lyricUrl = API.getLyric(song);
-        debugLog(`获取歌词URL: ${lyricUrl}`);
+    let lastError = null;
+    
+    // 尝试多个歌词源
+    for (let attempt = 0; attempt < LYRICS_SOURCES.length; attempt++) {
+        try {
+            const lyricUrl = API.getLyric(song);
+            debugLog(`尝试获取歌词 (源 ${currentLyricsSourceIndex}): ${lyricUrl}`);
 
-        const lyricData = await API.fetchJson(lyricUrl);
+            const lyricData = await API.fetchJson(lyricUrl);
 
-        if (lyricData && lyricData.lyric) {
-            parseLyrics(lyricData.lyric);
-            dom.lyrics.classList.remove("empty");
-            dom.lyrics.dataset.placeholder = "default";
-            debugLog(`歌词加载成功: ${state.lyricsData.length} 行`);
-        } else {
-            setLyricsContentHtml("<div>暂无歌词</div>");
-            dom.lyrics.classList.add("empty");
-            dom.lyrics.dataset.placeholder = "message";
-            state.lyricsData = [];
-            state.currentLyricLine = -1;
-            debugLog("歌词加载失败: 无歌词数据");
+            if (lyricData && lyricData.lyric) {
+                parseLyrics(lyricData.lyric);
+                dom.lyrics.classList.remove("empty");
+                dom.lyrics.dataset.placeholder = "default";
+                debugLog(`歌词加载成功: ${state.lyricsData.length} 行`);
+                return; // 成功则返回
+            } else {
+                throw new Error("无歌词数据");
+            }
+        } catch (error) {
+            lastError = error;
+            console.warn(`歌词源 ${currentLyricsSourceIndex} 加载失败:`, error);
+            debugLog(`歌词源 ${currentLyricsSourceIndex} 加载失败: ${error.message}`);
+            
+            // 如果还有其他源，切换到下一个
+            if (attempt < LYRICS_SOURCES.length - 1) {
+                switchToNextLyricsSource();
+                continue; // 继续尝试下一个源
+            }
         }
-    } catch (error) {
-        console.error("加载歌词失败:", error);
-        setLyricsContentHtml("<div>歌词加载失败</div>");
-        dom.lyrics.classList.add("empty");
-        dom.lyrics.dataset.placeholder = "message";
-        state.lyricsData = [];
-        state.currentLyricLine = -1;
-        debugLog(`歌词加载失败: ${error}`);
     }
+
+    // 所有源都失败
+    setLyricsContentHtml("<div>暂无歌词</div>");
+    dom.lyrics.classList.add("empty");
+    dom.lyrics.dataset.placeholder = "message";
+    state.lyricsData = [];
+    state.currentLyricLine = -1;
+    debugLog(`所有歌词源加载失败: ${lastError?.message}`);
 }
 
 // 修复：解析歌词
@@ -5972,163 +6117,3 @@ function showNotification(message, type = "success") {
         notification.classList.remove("show");
     }, 3000);
 }
-
-/**
- * 音乐项目核心脚本 - 多源 API 自动切换增强版
- * 功能：支持 4 个音源和 6 个歌词源自动轮询切换
- */
-
-// --- 1. 配置信息：在这里管理你的 API 地址 ---
-const API_CONFIG = {
-    // 音源 API 列表
-    audioSources: [
-        "https://music.gdstudio.xyz",
-        "https://api.i-meto.com/meting/api",
-        "https://api.injahow.cn/meting",
-        "https://api.paugram.com/meting"
-    ],
-    // 歌词 API 列表
-    lyricSources: [
-        "https://music.cyrilstudio.top/api",
-        "https://music.gdstudio.xyz",
-        "https://api.lyrics.lol",
-        "https://api.i-meto.com/meting/api",
-        "https://api.paugram.com/meting",
-        "https://api.injahow.cn/meting"
-    ],
-    // 默认服务器 (netease, tencent 等)
-    defaultServer: "netease"
-};
-
-// 全局状态跟踪
-let currentAudioIndex = 0;
-let currentLyricIndex = 0;
-let currentSongInfo = null; // 存储当前正在尝试播放的歌曲信息
-
-// --- 2. 核心 DOM 元素 ---
-const dom = {
-    audioPlayer: document.getElementById("audioPlayer"),
-    lyricsContent: document.getElementById("lyricsContent"),
-    mobileInlineLyricsContent: document.getElementById("mobileInlineLyricsContent"),
-    notification: document.getElementById("notification"),
-    // 其他 DOM 会由原项目逻辑初始化
-};
-
-// --- 3. 核心功能函数 ---
-
-// 通用通知函数
-function showNotice(msg, type = "success") {
-    if (dom.notification) {
-        dom.notification.textContent = msg;
-        dom.notification.className = `notification ${type} active`;
-        setTimeout(() => dom.notification.classList.remove("active"), 3000);
-    } else {
-        console.log(`[${type}] ${msg}`);
-    }
-}
-
-/**
- * 核心：尝试获取可用的音频播放地址
- * 如果一个 API 失败，会自动尝试下一个
- */
-async function fetchAudioUrlWithRetry(songId, server) {
-    for (let i = 0; i < API_CONFIG.audioSources.length; i++) {
-        const baseUrl = API_CONFIG.audioSources[i];
-        try {
-            console.log(`正在尝试音源 API (${i + 1}/${API_CONFIG.audioSources.length}): ${baseUrl}`);
-            const response = await fetch(`${baseUrl}?type=url&id=${songId}&server=${server}`);
-            const data = await response.json();
-            
-            if (data && data.url && data.url !== "" && data.url !== "null") {
-                currentAudioIndex = i; // 记录成功的索引
-                return data.url;
-            }
-            throw new Error("无效的 URL");
-        } catch (err) {
-            console.warn(`音源 ${baseUrl} 获取失败，切换下一个...`);
-        }
-    }
-    return null;
-}
-
-/**
- * 核心：尝试获取歌词
- * 如果一个接口没歌词，会自动换一个接口找
- */
-async function fetchLyricsWithRetry(songId, server) {
-    for (let i = 0; i < API_CONFIG.lyricSources.length; i++) {
-        const baseUrl = API_CONFIG.lyricSources[i];
-        try {
-            console.log(`正在尝试歌词 API (${i + 1}/${API_CONFIG.lyricSources.length})`);
-            const response = await fetch(`${baseUrl}?type=lrc&id=${songId}&server=${server}`);
-            const lrcText = await response.text();
-            
-            // 简单校验：如果返回的是 JSON 报错或者太短，说明没歌词
-            if (lrcText && lrcText.length > 20 && !lrcText.includes('{"status":false')) {
-                currentLyricIndex = i;
-                return lrcText;
-            }
-        } catch (err) {
-            continue; 
-        }
-    }
-    return "[00:00.00] 暂无可用歌词";
-}
-
-/**
- * 播放歌曲的主入口
- * 修改了原项目的播放逻辑，嵌入了重试机制
- */
-async function playSong(songData) {
-    currentSongInfo = songData; // 备份当前歌曲信息
-    const id = songData.id;
-    const server = songData.server || API_CONFIG.defaultServer;
-
-    showNotice("正在解析音源...");
-
-    // 1. 获取音源并播放
-    const audioUrl = await fetchAudioUrlWithRetry(id, server);
-    if (audioUrl) {
-        dom.audioPlayer.src = audioUrl;
-        dom.audioPlayer.play().catch(e => {
-            console.error("播放被浏览器拦截或加载失败");
-            handlePlaybackError();
-        });
-    } else {
-        showNotice("所有音源解析失败", "error");
-    }
-
-    // 2. 获取歌词并显示
-    const lyrics = await fetchLyricsWithRetry(id, server);
-    if (typeof renderLyrics === "function") {
-        renderLyrics(lyrics); // 调用原有的渲染函数
-    } else {
-        // 如果找不到原渲染函数，简单填充
-        if(dom.lyricsContent) dom.lyricsContent.innerText = lyrics;
-    }
-}
-
-/**
- * 处理播放中途报错（比如链接失效）
- */
-function handlePlaybackError() {
-    console.error("当前播放链路失效，尝试自动切换...");
-    // 这里可以触发重新解析逻辑
-    showNotice("当前音源失效，正在自动切换备用源...", "error");
-    // 逻辑：如果还有备用源，增加索引重新调 playSong
-    // 注意：为避免死循环，这里可以根据实际需求写
-}
-
-// 绑定播放器错误事件
-if (dom.audioPlayer) {
-    dom.audioPlayer.addEventListener('error', () => {
-        if (dom.audioPlayer.src && !dom.audioPlayer.src.includes(window.location.host)) {
-            handlePlaybackError();
-        }
-    });
-}
-
-// --- 后续保持原项目的其他初始化逻辑 ---
-// (此处请保留你 index.js 中关于 UI 交互、搜索、列表渲染的其他代码)
-console.log("多源切换插件已就绪");
-
