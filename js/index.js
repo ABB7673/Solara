@@ -773,129 +773,161 @@ const savedCurrentPlaylist = (() => {
 const API = {
     baseUrl: "/proxy",
 
+      // 备用API列表
+  backupUrls: [
+    "https://api.i-meto.com/meting/api",
+    "https://api.injahow.cn/meting/",
+    "https://api.paugram.com/meting/",
+    "https://music.cyrilstudio.top/api"
+  ],
+  currentBackupIndex: 0,
+
     generateSignature: () => {
         return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     },
 
-    fetchJson: async (url) => {
-        try {
-            const response = await fetch(url, {
-                headers: {
-                    "Accept": "application/json",
-                },
-            });
+      fetchJson: async (url) => {
+     try {
+      const response = await fetch(url, {
+        headers: {
+          "Accept": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch (parseError) {
+        console.warn("JSON parse failed, returning raw text", parseError);
+        return text;
+      }
+     } catch (error) {
+      // 如果默认API失败，尝试下一个备用API
+      if (API.currentBackupIndex < API.backupUrls.length - 1) {
+        API.currentBackupIndex++;
+        const backupUrl = API.backupUrls[API.currentBackupIndex];
+        const newUrl = url.replace(API.baseUrl, backupUrl);
+        return API.fetchJson(newUrl);
+      } else {
+        throw error;
+      }
+    }
+  },
 
-            if (!response.ok) {
-                throw new Error(`Request failed with status ${response.status}`);
-            }
+search: async (keyword, source = "netease", count = 20, page = 1, type = "all") => {
+  const signature = API.generateSignature();
+  const url = `${API.baseUrl}?types=search&source=${source}&name=${encodeURIComponent(keyword)}&count=${count}&pages=${page}&type=${type}&s=${signature}`;
+  try {
+    debugLog(`API请求: ${url}`);
+    const data = await API.fetchJson(url);
+    debugLog(`API响应: ${JSON.stringify(data).substring(0, 200)}...`);
+    if (!Array.isArray(data)) throw new Error("搜索结果格式错误");
+    return data.map(song => ({
+      id: song.id,
+      name: song.name,
+      artist: song.artist,
+      album: song.album,
+      pic_id: song.pic_id,
+      url_id: song.url_id,
+      lyric_id: song.lyric_id,
+      source: song.source,
+    }));
+  } catch (error) {
+    debugLog(`API错误: ${error.message}`);
+    throw error;
+  }
+},
 
-            const text = await response.text();
-            try {
-                return JSON.parse(text);
-            } catch (parseError) {
-                console.warn("JSON parse failed, returning raw text", parseError);
-                return text;
-            }
-        } catch (error) {
-            console.error("API request error:", error);
-            throw error;
-        }
-    },
-
-    search: async (keyword, source = "netease", count = 20, page = 1) => {
-        const signature = API.generateSignature();
-        const url = `${API.baseUrl}?types=search&source=${source}&name=${encodeURIComponent(keyword)}&count=${count}&pages=${page}&s=${signature}`;
-
-        try {
-            debugLog(`API请求: ${url}`);
-            const data = await API.fetchJson(url);
-            debugLog(`API响应: ${JSON.stringify(data).substring(0, 200)}...`);
-
-            if (!Array.isArray(data)) throw new Error("搜索结果格式错误");
-
-            return data.map(song => ({
-                id: song.id,
-                name: song.name,
-                artist: song.artist,
-                album: song.album,
-                pic_id: song.pic_id,
-                url_id: song.url_id,
-                lyric_id: song.lyric_id,
-                source: song.source,
-            }));
-        } catch (error) {
-            debugLog(`API错误: ${error.message}`);
-            throw error;
-        }
-    },
-
-    getRadarPlaylist: async (playlistId = "3778678", options = {}) => {
-        const signature = API.generateSignature();
-
-        let limit = 50;
-        let offset = 0;
-
-        if (typeof options === "number") {
-            limit = options;
-        } else if (options && typeof options === "object") {
-            if (Number.isFinite(options.limit)) {
-                limit = options.limit;
-            } else if (Number.isFinite(options.count)) {
-                limit = options.count;
-            }
-            if (Number.isFinite(options.offset)) {
-                offset = options.offset;
-            }
-        }
-
-        limit = Math.max(1, Math.min(200, Math.trunc(limit)) || 50);
-        offset = Math.max(0, Math.trunc(offset) || 0);
-
-        const params = new URLSearchParams({
-            types: "playlist",
-            id: playlistId,
-            limit: String(limit),
-            offset: String(offset),
-            s: signature,
-        });
-        const url = `${API.baseUrl}?${params.toString()}`;
-
-        try {
-            const data = await API.fetchJson(url);
-            const tracks = data && data.playlist && Array.isArray(data.playlist.tracks)
-                ? data.playlist.tracks.slice(0, limit)
-                : [];
-
-            if (tracks.length === 0) throw new Error("No tracks found");
-
-            return tracks.map(track => ({
-                id: track.id,
-                name: track.name,
-                artist: Array.isArray(track.ar) ? track.ar.map(artist => artist.name).join(" / ") : "",
-                source: "netease",
-                lyric_id: track.id,
-                pic_id: track.al?.pic_str || track.al?.pic || track.al?.picUrl || "",
-            }));
-        } catch (error) {
-            console.error("API request failed:", error);
-            throw error;
-        }
-    },
+getRadarPlaylist: async (playlistId = "3778678", options = {}) => {
+    const signature = API.generateSignature();
+    let limit = 50;
+    let offset = 0;
+    if (typeof options === "number") {
+      limit = options;
+    } else if (options && typeof options === "object") {
+      if (Number.isFinite(options.limit)) {
+        limit = options.limit;
+      } else if (Number.isFinite(options.count)) {
+        limit = options.count;
+      }
+      if (Number.isFinite(options.offset)) {
+        offset = options.offset;
+      }
+    }
+    limit = Math.max(1, Math.min(200, Math.trunc(limit)) || 50);
+    offset = Math.max(0, Math.trunc(offset) || 0);
+    const params = new URLSearchParams({
+      types: "playlist",
+      id: playlistId,
+      limit: String(limit),
+      offset: String(offset),
+      s: signature,
+    });
+    const url = `${API.baseUrl}?${params.toString()}`;
+    try {
+      const data = await API.fetchJson(url);
+      const tracks = data && data.playlist && Array.isArray(data.playlist.tracks) ? data.playlist.tracks.slice(0, limit) : [];
+      if (tracks.length === 0) throw new Error("No tracks found");
+      
+      // 过滤非中文歌曲
+      const filteredTracks = tracks.filter(track => {
+        // 假设歌曲的艺术家或歌曲名包含中文字符
+        const artist = Array.isArray(track.ar) ? track.ar.map(artist => artist.name).join(" / ") : "";
+        const name = track.name || "";
+        
+        // 检查是否包含中文字符
+        const hasChinese = /[\u4e00-\u9fa5]/.test(artist) || /[\u4e00-\u9fa5]/.test(name);
+        
+        // 排除摇滚、重金属、爵士、钢琴曲等风格
+        const excludedGenres = ["摇滚", "重金属", "爵士", "钢琴曲"];
+        const genre = track.genres || [];
+        const hasExcludedGenre = excludedGenres.some(genre => genre && genre.includes(genre));
+        
+        return hasChinese && !hasExcludedGenre;
+      });
+      
+      return filteredTracks.map(track => ({
+        id: track.id,
+        name: track.name,
+        artist: Array.isArray(track.ar) ? track.ar.map(artist => artist.name).join(" / ") : "",
+        source: "netease",
+        lyric_id: track.id,
+        pic_id: track.al?.pic_str || track.al?.pic || track.al?.picUrl || "",
+      }));
+    } catch (error) {
+      console.error("API request failed:", error);
+      throw error;
+    }
+  },
 
     getSongUrl: (song, quality = "320") => {
         const signature = API.generateSignature();
         return `${API.baseUrl}?types=url&id=${song.id}&source=${song.source || "netease"}&br=${quality}&s=${signature}`;
     },
 
-    getLyric: (song) => {
-        const signature = API.generateSignature();
-        return `${API.baseUrl}?types=lyric&id=${song.lyric_id || song.id}&source=${song.source || "netease"}&s=${signature}`;
-    },
-
-    getPicUrl: (song) => {
-        const signature = API.generateSignature();
-        return `${API.baseUrl}?types=pic&id=${song.pic_id}&source=${song.source || "netease"}&size=300&s=${signature}`;
+      getLyric: async (song) => {
+    const signature = API.generateSignature();
+    let url = `${API.baseUrl}?types=lyric&id=${song.lyric_id || song.id}&source=${song.source || "netease"}&s=${signature}`;
+    
+    try {
+      debugLog(`歌词API请求: ${url}`);
+      const data = await API.fetchJson(url);
+      debugLog(`歌词API响应: ${JSON.stringify(data).substring(0, 200)}...`);
+      return data;
+    } catch (error) {
+      // 如果默认API失败，尝试下一个备用API
+      if (API.currentBackupIndex < API.backupUrls.length - 1) {
+        API.currentBackupIndex++;
+        const backupUrl = API.backupUrls[API.currentBackupIndex];
+        url = url.replace(API.baseUrl, backupUrl);
+        return API.getLyric(song);
+      } else {
+        throw error;
+      }
     }
+  },
 };
 
 Object.freeze(API);
@@ -5981,142 +6013,3 @@ function showNotification(message, type = "success") {
         notification.classList.remove("show");
     }, 3000);
 }
-
-const dom = { container: document.getElementById("mainContainer"), backgroundStage: document.getElementById("backgroundStage"), backgroundBaseLayer: document.getElementById("backgroundBaseLayer"), backgroundTransitionLayer: document.getElementById("backgroundTransitionLayer"), playlist: document.getElementById("playlist"), playlistItems: document.getElementById("playlistItems"), favorites: document.getElementById("favorites"), favoriteItems: document.getElementById("favoriteItems"), lyrics: document.getElementById("lyrics"), lyricsScroll: document.getElementById("lyricsScroll"), lyricsContent: document.getElementById("lyricsContent"), mobileInlineLyrics: document.getElementById("mobileInlineLyrics"), mobileInlineLyricsScroll: document.getElementById("mobileInlineLyricsScroll"), mobileInlineLyricsContent: document.getElementById("mobileInlineLyricsContent"), audioPlayer: document.getElementById("audioPlayer"), themeToggleButton: document.getElementById("themeToggleButton"), loadOnlineBtn: document.getElementById("loadOnlineBtn"), showPlaylistBtn: document.getElementById("showPlaylistBtn"), showLyricsBtn: document.getElementById("showLyricsBtn"), searchInput: document.getElementById("searchInput"), searchBtn: document.getElementById("searchBtn"), sourceSelectButton: document.getElementById("sourceSelectButton"), sourceSelectLabel: document.getElementById("sourceSelectLabel"), sourceMenu: document.getElementById("sourceMenu"), searchResults: document.getElementById("searchResults"), searchResultsList: document.getElementById("searchResultsList"), notification: document.getElementById("notification"), albumCover: document.getElementById("albumCover"), currentSongTitle: document.getElementById("currentSongTitle"), currentSongArtist: document.getElementById("currentSongArtist"), debugInfo: document.getElementById("debugInfo"), importSelectedBtn: document.getElementById("importSelectedBtn"), importSelectedCount: document.getElementById("importSelectedCount"), importSelectedMenu: document.getElementById("importSelectedMenu"), importToPlaylist: document.getElementById("importToPlaylist"), importToFavorites: document.getElementById("importToFavorites"), importPlaylistBtn: document.getElementById("importPlaylistBtn"), exportPlaylistBtn: document.getElementById("exportPlaylistBtn"), importPlaylistInput: document.getElementById("importPlaylistInput"), clearPlaylistBtn: document.getElementById("clearPlaylistBtn"), mobileImportPlaylistBtn: document.getElementById("mobileImportPlaylistBtn"), mobileExportPlaylistBtn: document.getElementById("mobileExportPlaylistBtn"), playModeBtn: document.getElementById("playModeBtn"), playPauseBtn: document.getElementById("playPauseBtn"), progressBar: document.getElementById("progressBar"), currentTimeDisplay: document.getElementById("currentTimeDisplay"), durationDisplay: document.getElementById("durationDisplay"), volumeSlider: document.getElementById("volumeSlider"), volumeIcon: document.getElementById("volumeIcon"), qualityToggle: document.getElementById("qualityToggle"), playerQualityMenu: document.getElementById("playerQualityMenu"), qualityLabel: document.getElementById("qualityLabel"), mobileToolbarTitle: document.getElementById("mobileToolbarTitle"), mobileSearchToggle: document.getElementById("mobileSearchToggle"), mobileSearchClose: document.getElementById("mobileSearchClose"), mobilePanelClose: document.getElementById("mobilePanelClose"), mobileClearPlaylistBtn: document.getElementById("mobileClearPlaylistBtn"), mobilePlaylistActions: document.getElementById("mobilePlaylistActions"), mobileFavoritesActions: document.getElementById("mobileFavoritesActions"), mobileAddAllFavoritesBtn: document.getElementById("mobileAddAllFavoritesBtn"), mobileImportFavoritesBtn: document.getElementById("mobileImportFavoritesBtn"), mobileExportFavoritesBtn: document.getElementById("mobileExportFavoritesBtn"), mobileClearFavoritesBtn: document.getElementById("mobileClearFavoritesBtn"), mobileOverlayScrim: document.getElementById("mobileOverlayScrim"), mobileExploreButton: document.getElementById("mobileExploreButton"), mobileQualityToggle: document.getElementById("mobileQualityToggle"), mobileQualityLabel: document.getElementById("mobileQualityLabel"), mobilePanel: document.getElementById("mobilePanel"), mobileQueueToggle: document.getElementById("mobileQueueToggle"), shuffleToggleBtn: document.getElementById("shuffleToggleBtn"), searchArea: document.getElementById("searchArea"), libraryTabs: Array.from(document.querySelectorAll(".playlist-tab[data-target]")), addAllFavoritesBtn: document.getElementById("addAllFavoritesBtn"), importFavoritesBtn: document.getElementById("importFavoritesBtn"), exportFavoritesBtn: document.getElementById("exportFavoritesBtn"), importFavoritesInput: document.getElementById("importFavoritesInput"), clearFavoritesBtn: document.getElementById("clearFavoritesBtn"), currentFavoriteToggle: document.getElementById("currentFavoriteToggle"),};window.SolaraDom = dom;const isMobileView = Boolean(window.__SOLARA_IS_MOBILE);const mobileBridge = window.SolaraMobileBridge || {};mobileBridge.handlers = mobileBridge.handlers || {};mobileBridge.queue = Array.isArray(mobileBridge.queue) ? mobileBridge.queue : [];window.SolaraMobileBridge = mobileBridge;function invokeMobileHook(name, ...args) { if (!isMobileView) { return undefined; } const handler = mobileBridge.handlers[name]; if (typeof handler === "function") { return handler(...args); } mobileBridge.queue.push({ name, args }); return undefined;}function initializeMobileUI() { return invokeMobileHook("initialize");}function updateMobileToolbarTitle() { return invokeMobileHook("updateToolbarTitle");}function runAfterOverlayFrame(callback) { if (typeof callback !== "function" || !isMobileView) { return; } const runner = () => { if (!document.body) { return; } callback(); }; if (typeof window.requestAnimationFrame === "function") { window.requestAnimationFrame(runner); } else { window.setTimeout(runner, 0); }}function syncMobileOverlayVisibility() { if (!isMobileView || !document.body) { return; } const searchOpen = document.body.classList.contains("mobile-search-open"); const panelOpen = document.body.classList.contains("mobile-panel-open"); if (dom.searchArea) { dom.searchArea.setAttribute("aria-hidden", searchOpen ? "false" : "true"); } if (dom.mobileOverlayScrim) { dom.mobileOverlayScrim.setAttribute("aria-hidden", (searchOpen || panelOpen) ? "false" : "true"); }}function updateMobileClearPlaylistVisibility() { if (!isMobileView) { return; } const button = dom.mobileClearPlaylistBtn; if (!button) { return; } const playlistElement = dom.playlist; const body = document.body; const currentView = body ? body.getAttribute("data-mobile-panel-view") : null; const isPlaylistView = !body || !currentView || currentView === "playlist"; const playlistSongs = (typeof state !== "undefined" && Array.isArray(state.playlistSongs)) ? state.playlistSongs : []; const isEmpty = playlistSongs.length === 0 || !playlistElement || playlistElement.classList.contains("empty"); const isPlaylistVisible = Boolean(playlistElement && !playlistElement.hasAttribute("hidden")); const shouldShow = isPlaylistView && isPlaylistVisible && !isEmpty; button.hidden = !shouldShow; button.setAttribute("aria-hidden", shouldShow ? "false" : "true");}function updateMobileLibraryActionVisibility(showFavorites) { if (!isMobileView) { return; } const playlistGroup = dom.mobilePlaylistActions; const favoritesGroup = dom.mobileFavoritesActions; const showFavoritesGroup = Boolean(showFavorites); if (playlistGroup) { if (showFavoritesGroup) { playlistGroup.setAttribute("hidden", ""); playlistGroup.setAttribute("aria-hidden", "true"); } else { playlistGroup.removeAttribute("hidden"); playlistGroup.setAttribute("aria-hidden", "false"); } } if (favoritesGroup) { if (showFavoritesGroup) { favoritesGroup.removeAttribute("hidden"); favoritesGroup.setAttribute("aria-hidden", "false"); } else { favoritesGroup.setAttribute("hidden", ""); favoritesGroup.setAttribute("aria-hidden", "true"); } }}function forceCloseMobileSearchOverlay() { if (!isMobileView || !document.body) { return; } document.body.classList.remove("mobile-search-open"); if (dom.searchInput) { dom.searchInput.blur(); } syncMobileOverlayVisibility();}function forceCloseMobilePanelOverlay() { if (!isMobileView || !document.body) { return; } document.body.classList.remove("mobile-panel-open"); syncMobileOverlayVisibility();}function openMobileSearch() { return invokeMobileHook("openSearch");}function closeMobileSearch() { const result = invokeMobileHook("closeSearch"); runAfterOverlayFrame(forceCloseMobileSearchOverlay); return result;}function toggleMobileSearch() { return invokeMobileHook("toggleSearch");}function openMobilePanel(view = "playlist") { return invokeMobileHook("openPanel", view);}function closeMobilePanel() { const result = invokeMobileHook("closePanel"); runAfterOverlayFrame(forceCloseMobilePanelOverlay); return result;}function toggleMobilePanel(view = "playlist") { return invokeMobileHook("togglePanel", view);}function closeAllMobileOverlays() { const result = invokeMobileHook("closeAllOverlays"); runAfterOverlayFrame(() => { forceCloseMobileSearchOverlay(); forceCloseMobilePanelOverlay(); }); return result;}function updateMobileInlineLyricsAria(isOpen) { if (!dom.mobileInlineLyrics) { return; } dom.mobileInlineLyrics.setAttribute("aria-hidden", isOpen ? "false" : "true");}function setMobileInlineLyricsOpen(isOpen) { if (!isMobileView || !document.body || !dom.mobileInlineLyrics) { return; } state.isMobileInlineLyricsOpen = Boolean(isOpen); document.body.classList.toggle("mobile-inline-lyrics-open", Boolean(isOpen)); updateMobileInlineLyricsAria(Boolean(isOpen));}function hasInlineLyricsContent() { const content = dom.mobileInlineLyricsContent; if (!content) { return false; } return content.textContent.trim().length > 0;}function canOpenMobileInlineLyrics() { if (!isMobileView || !document.body) { return false; } const hasSong = Boolean(state.currentSong); return hasSong && hasInlineLyricsContent();}function closeMobileInlineLyrics(options = {}) { if (!isMobileView || !document.body) { return false; } if (!document.body.classList.contains("mobile-inline-lyrics-open")) { updateMobileInlineLyricsAria(false); state.isMobileInlineLyricsOpen = false; return false; } setMobileInlineLyricsOpen(false); if (options.force) { state.userScrolledLyrics = false; } return true;}function openMobileInlineLyrics() { if (!isMobileView || !document.body) { return false; } if (!canOpenMobileInlineLyrics()) { return false; } setMobileInlineLyricsOpen(true); state.userScrolledLyrics = false; window.requestAnimationFrame(() => { const container = dom.mobileInlineLyricsScroll || dom.mobileInlineLyrics; const activeLyric = dom.mobileInlineLyricsContent?.querySelector(".current") || dom.mobileInlineLyricsContent?.querySelector("div[data-index]"); if (container && activeLyric) { scrollToCurrentLyric(activeLyric, container); } }); syncLyrics(); return true;}function toggleMobileInlineLyrics() { if (!isMobileView || !document.body) { return; } if (document.body.classList.contains("mobile-inline-lyrics-open")) { closeMobileInlineLyrics(); } else { openMobileInlineLyrics(); }}const PLACEHOLDER_HTML = `<div class="placeholder"><i class="fas fa-music"></i></div>`;const paletteCache = new Map();const PALETTE_STORAGE_KEY = "paletteCache.v1";let paletteAbortController = null;const BACKGROUND_TRANSITION_DURATION = 850;let backgroundTransitionTimer = null;const PALETTE_APPLY_DELAY = 140;let pendingPaletteTimer = null;let deferredPaletteHandle = null;let deferredPaletteType = "";let deferredPaletteUrl = null;const themeDefaults = { light: { gradient: "", primaryColor: "", primaryColorDark: "", }, dark: { gradient: "", primaryColor: "", primaryColorDark: "", }};let paletteRequestId = 0;const REMOTE_STORAGE_ENDPOINT = "/api/storage";let remoteSyncEnabled = false;const STORAGE_KEYS_TO_SYNC = new Set([ "playlistSongs", "currentTrackIndex", "playMode", "playbackQuality", "playerVolume", "currentPlaylist", "currentList", "currentSong", "currentPlaybackTime", "favoriteSongs", "currentFavoriteIndex", "favoritePlayMode", "favoritePlaybackTime", "searchSource", "lastSearchState.v1",]);function createPersistentStorageClient() { let availabilityPromise = null; let remoteAvailable = false; const checkAvailability = async () => { if (availabilityPromise) { return availabilityPromise; } availabilityPromise = (async () => { try { const url = new URL(REMOTE_STORAGE_ENDPOINT, window.location.origin); url.searchParams.set("status", "1"); const response = await fetch(url.toString(), { method: "GET" }); if (!response.ok) { return false; } const result = await response.json().catch(() => ({})); remoteAvailable = Boolean(result && result.d1Available); return remoteAvailable; } catch (error) { console.warn("检查远程存储可用性失败", error); return false; } })(); return availabilityPromise; }; const getItems = async (keys = []) => { const available = await checkAvailability(); if (!available || !Array.isArray(keys) || keys.length === 0) { return null; } try { const url = new URL(REMOTE_STORAGE_ENDPOINT, window.location.origin); url.searchParams.set("keys", keys.join(",")); const response = await fetch(url.toString(), { method: "GET" }); if (!response.ok) { return null; } return await response.json(); } catch (error) { console.warn("获取远程存储数据失败", error); return null; } }; const setItems = async (items) => { const available = await checkAvailability(); if (!available || !items || typeof items !== "object") { return false; } try { await fetch(REMOTE_STORAGE_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: items }), }); return true; } catch (error) { console.warn("写入远程存储失败", error); return false; } }; const removeItems = async (keys = []) => { const available = await checkAvailability(); if (!available || !Array.isArray(keys) || keys.length === 0) { return false; } try { await fetch(REMOTE_STORAGE_ENDPOINT, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ keys }), }); return true; } catch (error) { console.warn("删除远程存储数据失败", error); return false; } }; return { checkAvailability, getItems, setItems, removeItems, };}const persistentStorage = createPersistentStorageClient();function shouldSyncStorageKey(key) { return STORAGE_KEYS_TO_SYNC.has(key);}function persistStorageItems(items) { if (!items || typeof items !== "object") { return; } persistentStorage.setItems(items).catch((error) => { console.warn("同步远程存储失败", error); });}function removePersistentItems(keys = []) { if (!Array.isArray(keys) || keys.length === 0) { return; } persistentStorage.removeItems(keys).catch((error) => { console.warn("移除远程存储数据失败", error); });}function safeGetLocalStorage(key) { try { return localStorage.getItem(key); } catch (error) { console.warn(`读取本地存储失败: ${key}`, error); return null; }}function safeSetLocalStorage(key, value, options = {}) { const { skipRemote = false } = options; try { localStorage.setItem(key, value); } catch (error) { console.warn(`写入本地存储失败: ${key}`, error); } if (!skipRemote && remoteSyncEnabled && shouldSyncStorageKey(key)) { persistStorageItems({ [key]: value }); }}function safeRemoveLocalStorage(key, options = {}) { const { skipRemote = false } = options; try { localStorage.removeItem(key); } catch (error) { console.warn(`移除本地存储失败: ${key}`, error); } if (!skipRemote && remoteSyncEnabled && shouldSyncStorageKey(key)) { removePersistentItems([key]); }}function parseJSON(value, fallback) { if (!value) return fallback; try { const parsed = JSON.parse(value); return parsed; } catch (error) { console.warn("解析本地存储 JSON 失败", error); return fallback; }}function cloneSearchResults(results) { if (!Array.isArray(results)) { return []; } try { return JSON.parse(JSON.stringify(results)); } catch (error) { console.warn("复制搜索结果失败，回退到浅拷贝", error); return results.map((item) => { if (item && typeof item === "object") { return { ...item }; } return item; }); }}function sanitizeStoredSearchState(data, defaultSource = SOURCE_OPTIONS[0].value) { if (!data || typeof data !== "object") { return null; } const keyword = typeof data.keyword === "string" ? data.keyword : ""; const sourceValue = typeof data.source === "string" ? data.source : defaultSource; const source = normalizeSource(sourceValue); const page = Number.isInteger(data.page) && data.page > 0 ? data.page : 1; const hasMore = typeof data.hasMore === "boolean" ? data.hasMore : true; const results = cloneSearchResults(data.results); return { keyword, source, page, hasMore, results };}function loadStoredPalettes() { const stored = safeGetLocalStorage(PALETTE_STORAGE_KEY); if (!stored) { return; } try { const entries = JSON.parse(stored); if (Array.isArray(entries)) { for (const entry of entries) { if (Array.isArray(entry) && typeof entry[0] === "string" && entry[1] && typeof entry[1] === "object") { paletteCache.set(entry[0], entry[1]); } } } } catch (error) { console.warn("解析调色板缓存失败", error); }}function persistPaletteCache() { const maxEntries = 20; const entries = Array.from(paletteCache.entries()).slice(-maxEntries); try { safeSetLocalStorage(PALETTE_STORAGE_KEY, JSON.stringify(entries)); } catch (error) { console.warn("保存调色板缓存失败", error); }}function preferHttpsUrl(url) { if (!url || typeof url !== "string") return url; try { const parsedUrl = new URL(url, window.location.href); if (parsedUrl.protocol === "http:" && window.location.protocol === "https:") { parsedUrl.protocol = "https:"; return parsedUrl.toString(); } return parsedUrl.toString(); } catch (error) { if (window.location.protocol === "https:" && url.startsWith("http://")) { return "https://" + url.substring("http://".length); } return url; }}function toAbsoluteUrl(url) { if (!url) { return ""; } try { const absolute = new URL(url, window.location.href); return absolute.href; } catch (_) { return url; }}function buildAudioProxyUrl(url) { if (!url || typeof url !== "string") return url; try { const parsedUrl = new URL(url, window.location.href); if (parsedUrl.protocol === "https:") { return parsedUrl.toString(); } if (parsedUrl.protocol === "http:" && /(^|\.)kuwo\.cn$/i.test(parsedUrl.hostname)) { return `${API.baseUrl}?target=${encodeURIComponent(parsedUrl.toString())}`; } return parsedUrl.toString(); } catch (error) { console.warn("无法解析音频地址，跳过代理", error); return url; }}const SOURCE_OPTIONS = [ { value: "netease", label: "网易云音乐" }, { value: "kuwo", label: "酷我音乐" }, { value: "joox", label: "JOOX音乐" }];function normalizeSource(value) { const allowed = SOURCE_OPTIONS.map(option => option.value); return allowed.includes(value) ? value : SOURCE_OPTIONS[0].value;}const QUALITY_OPTIONS = [ { value: "128", label: "标准音质", description: "128 kbps" }, { value: "192", label: "高品音质", description: "192 kbps" }, { value: "320", label: "极高音质", description: "320 kbps" }, { value: "999", label: "无损音质", description: "FLAC" }];function normalizeQuality(value) { const match = QUALITY_OPTIONS.find(option => option.value === value); return match ? match.value : "320";}const savedPlaylistSongs = (() => { const stored = safeGetLocalStorage("playlistSongs"); const playlist = parseJSON(stored, []); return Array.isArray(playlist) ? playlist : [];})();const PLAYLIST_EXPORT_VERSION = 1;const savedFavoriteSongs = (() => { const stored = safeGetLocalStorage("favoriteSongs"); const favorites = parseJSON(stored, []); return Array.isArray(favorites) ? favorites : [];})();const FAVORITE_EXPORT_VERSION = 1;const savedCurrentFavoriteIndex = (() => { const stored = safeGetLocalStorage("currentFavoriteIndex"); const index = Number.parseInt(stored, 10); return Number.isInteger(index) && index >= 0 ? index : 0;})();const savedFavoritePlayMode = (() => { const stored = safeGetLocalStorage("favoritePlayMode"); const normalized = stored === "order" ? "list" : stored; const modes = ["list", "single", "random"]; return modes.includes(normalized) ? normalized : "list";})();const savedFavoritePlaybackTime = (() => { const stored = safeGetLocalStorage("favoritePlaybackTime"); const time = Number.parseFloat(stored); return Number.isFinite(time) && time >= 0 ? time : 0;})();const savedCurrentList = (() => { const stored = safeGetLocalStorage("currentList"); return stored === "favorite" ? "favorite" : "playlist";})();const savedCurrentTrackIndex = (() => { const stored = safeGetLocalStorage("currentTrackIndex"); const index = Number.parseInt(stored, 10); return Number.isInteger(index) ? index : -1;})();const savedPlayMode = (() => { const stored = safeGetLocalStorage("playMode"); const modes = ["list", "single", "random"]; return modes.includes(stored) ? stored : "list";})();const savedPlaybackQuality = normalizeQuality(safeGetLocalStorage("playbackQuality"));const savedVolume = (() => { const stored = safeGetLocalStorage("playerVolume"); const volume = Number.parseFloat(stored); if (Number.isFinite(volume)) { return Math.min(Math.max(volume, 0), 1); } return 0.8;})();const savedSearchSource = (() => { const stored = safeGetLocalStorage("searchSource"); return normalizeSource(stored);})();const LAST_SEARCH_STATE_STORAGE_KEY = "lastSearchState.v1";const savedLastSearchState = (() => { const stored = safeGetLocalStorage(LAST_SEARCH_STATE_STORAGE_KEY); const parsed = parseJSON(stored, null); return sanitizeStoredSearchState(parsed, savedSearchSource || SOURCE_OPTIONS[0].value);})();let lastSearchStateCache = savedLastSearchState ? { ...savedLastSearchState, results: cloneSearchResults(savedLastSearchState.results) } : null;const savedPlaybackTime = (() => { const stored = safeGetLocalStorage("currentPlaybackTime"); const time = Number.parseFloat(stored); return Number.isFinite(time) && time >= 0 ? time : 0;})();const savedCurrentSong = (() => { const stored = safeGetLocalStorage("currentSong"); return parseJSON(stored, null);})();const savedCurrentPlaylist = (() => { const stored = safeGetLocalStorage("currentPlaylist"); const playlists = ["playlist", "online", "search", "favorites"]; return playlists.includes(stored) ? stored : "playlist";})();const SEARCH_TYPES = [
-  { value: "all", label: "全部" },
-  { value: "song", label: "单曲" },
-  { value: "artist", label: "歌手" },
-  { value: "album", label: "专辑" },
-  { value: "playlist", label: "歌单" }
-]; // 新增：搜索类型选项
-
-// API配置 - 修复API地址和请求方式
-const API = {
-  baseUrl: "/proxy",
-  // 备用API列表
-  backupUrls: [
-    "https://api.i-meto.com/meting/api",
-    "https://api.injahow.cn/meting/",
-    "https://api.paugram.com/meting/",
-    "https://music.cyrilstudio.top/api"
-  ],
-  currentBackupIndex: 0,
-  generateSignature: () => {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  },
-  fetchJson: async (url) => {
-    try {
-      const response = await fetch(url, {
-        headers: {
-          "Accept": "application/json",
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`);
-      }
-      const text = await response.text();
-      try {
-        return JSON.parse(text);
-      } catch (parseError) {
-        console.warn("JSON parse failed, returning raw text", parseError);
-        return text;
-      }
-    } catch (error) {
-      // 如果默认API失败，尝试下一个备用API
-      if (API.currentBackupIndex < API.backupUrls.length - 1) {
-        API.currentBackupIndex++;
-        const backupUrl = API.backupUrls[API.currentBackupIndex];
-        const newUrl = url.replace(API.baseUrl, backupUrl);
-        return API.fetchJson(newUrl);
-      } else {
-        throw error;
-      }
-    }
-  },
-  search: async (keyword, source = "netease", count = 20, page = 1, type = "all") => {
-    const signature = API.generateSignature();
-    const url = `${API.baseUrl}?types=search&source=${source}&name=${encodeURIComponent(keyword)}&count=${count}&pages=${page}&type=${type}&s=${signature}`;
-    try {
-      debugLog(`API请求: ${url}`);
-      const data = await API.fetchJson(url);
-      debugLog(`API响应: ${JSON.stringify(data).substring(0, 200)}...`);
-      if (!Array.isArray(data)) throw new Error("搜索结果格式错误");
-      return data.map(song => ({
-        id: song.id,
-        name: song.name,
-        artist: song.artist,
-        album: song.album,
-        pic_id: song.pic_id,
-        url_id: song.url_id,
-        lyric_id: song.lyric_id,
-        source: song.source,
-      }));
-    } catch (error) {
-      debugLog(`API错误: ${error.message}`);
-      throw error;
-    }
-  },
-  getRadarPlaylist: async (playlistId = "3778678", options = {}) => {
-    const signature = API.generateSignature();
-    let limit = 50;
-    let offset = 0;
-    if (typeof options === "number") {
-      limit = options;
-    } else if (options && typeof options === "object") {
-      if (Number.isFinite(options.limit)) {
-        limit = options.limit;
-      } else if (Number.isFinite(options.count)) {
-        limit = options.count;
-      }
-      if (Number.isFinite(options.offset)) {
-        offset = options.offset;
-      }
-    }
-    limit = Math.max(1, Math.min(200, Math.trunc(limit)) || 50);
-    offset = Math.max(0, Math.trunc(offset) || 0);
-    const params = new URLSearchParams({
-      types: "playlist",
-      id: playlistId,
-      limit: String(limit),
-      offset: String(offset),
-      s: signature,
-    });
-    const url = `${API.baseUrl}?${params.toString()}`;
-    try {
-      const data = await API.fetchJson(url);
-      const tracks = data && data.playlist && Array.isArray(data.playlist.tracks) ? data.playlist.tracks.slice(0, limit) : [];
-      if (tracks.length === 0) throw new Error("No tracks found");
-      
-      // 过滤非中文歌曲
-      const filteredTracks = tracks.filter(track => {
-        // 假设歌曲的艺术家或歌曲名包含中文字符
-        const artist = Array.isArray(track.ar) ? track.ar.map(artist => artist.name).join(" / ") : "";
-        const name = track.name || "";
-        
-        // 检查是否包含中文字符
-        const hasChinese = /[\u4e00-\u9fa5]/.test(artist) || /[\u4e00-\u9fa5]/.test(name);
-        
-        // 排除摇滚、重金属、爵士、钢琴曲等风格
-        const excludedGenres = ["摇滚", "重金属", "爵士", "钢琴曲"];
-        const genre = track.genres || [];
-        const hasExcludedGenre = excludedGenres.some(genre => genre && genre.includes(genre));
-        
-        return hasChinese && !hasExcludedGenre;
-      });
-      
-      return filteredTracks.map(track => ({
-        id: track.id,
-        name: track.name,
-        artist: Array.isArray(track.ar) ? track.ar.map(artist => artist.name).join(" / ") : "",
-        source: "netease",
-        lyric_id: track.id,
-        pic_id: track.al?.pic_str || track.al?.pic || track.al?.picUrl || "",
-      }));
-    } catch (error) {
-      console.error("API request failed:", error);
-      throw error;
-    }
-  },
-  getSongUrl: (song, quality = "320") => {
-    const signature = API.generateSignature();
-    return `${API.baseUrl}?
