@@ -939,12 +939,3 @@ body.mobile-view #notification.show {
 body.mobile-view .debug-info {
     display: none;
 }
-
-/* 白底黑字主题适配 */
-.white-theme {
-  /* 保持与style.css中的设置一致 */
-}
-
-.white-theme .search-type-options .search-type-btn {
-  /* 保持与style.css中的设置一致 */
-}
