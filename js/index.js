@@ -1,12 +1,3 @@
-// 在文件开头添加搜索类型选项
-const SEARCH_TYPES = [
-  { value: "all", label: "全部" },
-  { value: "song", label: "单曲" },
-  { value: "artist", label: "歌手" },
-  { value: "album", label: "专辑" },
-  { value: "playlist", label: "歌单" }
-];
-
 const dom = {
     container: document.getElementById("mainContainer"),
     backgroundStage: document.getElementById("backgroundStage"),
@@ -773,161 +764,129 @@ const savedCurrentPlaylist = (() => {
 const API = {
     baseUrl: "/proxy",
 
-      // 备用API列表
-  backupUrls: [
-    "https://api.i-meto.com/meting/api",
-    "https://api.injahow.cn/meting/",
-    "https://api.paugram.com/meting/",
-    "https://music.cyrilstudio.top/api"
-  ],
-  currentBackupIndex: 0,
-
     generateSignature: () => {
         return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     },
 
-      fetchJson: async (url) => {
-     try {
-      const response = await fetch(url, {
-        headers: {
-          "Accept": "application/json",
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`);
-      }
-      const text = await response.text();
-      try {
-        return JSON.parse(text);
-      } catch (parseError) {
-        console.warn("JSON parse failed, returning raw text", parseError);
-        return text;
-      }
-     } catch (error) {
-      // 如果默认API失败，尝试下一个备用API
-      if (API.currentBackupIndex < API.backupUrls.length - 1) {
-        API.currentBackupIndex++;
-        const backupUrl = API.backupUrls[API.currentBackupIndex];
-        const newUrl = url.replace(API.baseUrl, backupUrl);
-        return API.fetchJson(newUrl);
-      } else {
-        throw error;
-      }
-    }
-  },
+    fetchJson: async (url) => {
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    "Accept": "application/json",
+                },
+            });
 
-search: async (keyword, source = "netease", count = 20, page = 1, type = "all") => {
-  const signature = API.generateSignature();
-  const url = `${API.baseUrl}?types=search&source=${source}&name=${encodeURIComponent(keyword)}&count=${count}&pages=${page}&type=${type}&s=${signature}`;
-  try {
-    debugLog(`API请求: ${url}`);
-    const data = await API.fetchJson(url);
-    debugLog(`API响应: ${JSON.stringify(data).substring(0, 200)}...`);
-    if (!Array.isArray(data)) throw new Error("搜索结果格式错误");
-    return data.map(song => ({
-      id: song.id,
-      name: song.name,
-      artist: song.artist,
-      album: song.album,
-      pic_id: song.pic_id,
-      url_id: song.url_id,
-      lyric_id: song.lyric_id,
-      source: song.source,
-    }));
-  } catch (error) {
-    debugLog(`API错误: ${error.message}`);
-    throw error;
-  }
-},
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
 
-getRadarPlaylist: async (playlistId = "3778678", options = {}) => {
-    const signature = API.generateSignature();
-    let limit = 50;
-    let offset = 0;
-    if (typeof options === "number") {
-      limit = options;
-    } else if (options && typeof options === "object") {
-      if (Number.isFinite(options.limit)) {
-        limit = options.limit;
-      } else if (Number.isFinite(options.count)) {
-        limit = options.count;
-      }
-      if (Number.isFinite(options.offset)) {
-        offset = options.offset;
-      }
-    }
-    limit = Math.max(1, Math.min(200, Math.trunc(limit)) || 50);
-    offset = Math.max(0, Math.trunc(offset) || 0);
-    const params = new URLSearchParams({
-      types: "playlist",
-      id: playlistId,
-      limit: String(limit),
-      offset: String(offset),
-      s: signature,
-    });
-    const url = `${API.baseUrl}?${params.toString()}`;
-    try {
-      const data = await API.fetchJson(url);
-      const tracks = data && data.playlist && Array.isArray(data.playlist.tracks) ? data.playlist.tracks.slice(0, limit) : [];
-      if (tracks.length === 0) throw new Error("No tracks found");
-      
-      // 过滤非中文歌曲
-      const filteredTracks = tracks.filter(track => {
-        // 假设歌曲的艺术家或歌曲名包含中文字符
-        const artist = Array.isArray(track.ar) ? track.ar.map(artist => artist.name).join(" / ") : "";
-        const name = track.name || "";
-        
-        // 检查是否包含中文字符
-        const hasChinese = /[\u4e00-\u9fa5]/.test(artist) || /[\u4e00-\u9fa5]/.test(name);
-        
-        // 排除摇滚、重金属、爵士、钢琴曲等风格
-        const excludedGenres = ["摇滚", "重金属", "爵士", "钢琴曲"];
-        const genre = track.genres || [];
-        const hasExcludedGenre = excludedGenres.some(genre => genre && genre.includes(genre));
-        
-        return hasChinese && !hasExcludedGenre;
-      });
-      
-      return filteredTracks.map(track => ({
-        id: track.id,
-        name: track.name,
-        artist: Array.isArray(track.ar) ? track.ar.map(artist => artist.name).join(" / ") : "",
-        source: "netease",
-        lyric_id: track.id,
-        pic_id: track.al?.pic_str || track.al?.pic || track.al?.picUrl || "",
-      }));
-    } catch (error) {
-      console.error("API request failed:", error);
-      throw error;
-    }
-  },
+            const text = await response.text();
+            try {
+                return JSON.parse(text);
+            } catch (parseError) {
+                console.warn("JSON parse failed, returning raw text", parseError);
+                return text;
+            }
+        } catch (error) {
+            console.error("API request error:", error);
+            throw error;
+        }
+    },
+
+    search: async (keyword, source = "netease", count = 20, page = 1) => {
+        const signature = API.generateSignature();
+        const url = `${API.baseUrl}?types=search&source=${source}&name=${encodeURIComponent(keyword)}&count=${count}&pages=${page}&s=${signature}`;
+
+        try {
+            debugLog(`API请求: ${url}`);
+            const data = await API.fetchJson(url);
+            debugLog(`API响应: ${JSON.stringify(data).substring(0, 200)}...`);
+
+            if (!Array.isArray(data)) throw new Error("搜索结果格式错误");
+
+            return data.map(song => ({
+                id: song.id,
+                name: song.name,
+                artist: song.artist,
+                album: song.album,
+                pic_id: song.pic_id,
+                url_id: song.url_id,
+                lyric_id: song.lyric_id,
+                source: song.source,
+            }));
+        } catch (error) {
+            debugLog(`API错误: ${error.message}`);
+            throw error;
+        }
+    },
+
+    getRadarPlaylist: async (playlistId = "3778678", options = {}) => {
+        const signature = API.generateSignature();
+
+        let limit = 50;
+        let offset = 0;
+
+        if (typeof options === "number") {
+            limit = options;
+        } else if (options && typeof options === "object") {
+            if (Number.isFinite(options.limit)) {
+                limit = options.limit;
+            } else if (Number.isFinite(options.count)) {
+                limit = options.count;
+            }
+            if (Number.isFinite(options.offset)) {
+                offset = options.offset;
+            }
+        }
+
+        limit = Math.max(1, Math.min(200, Math.trunc(limit)) || 50);
+        offset = Math.max(0, Math.trunc(offset) || 0);
+
+        const params = new URLSearchParams({
+            types: "playlist",
+            id: playlistId,
+            limit: String(limit),
+            offset: String(offset),
+            s: signature,
+        });
+        const url = `${API.baseUrl}?${params.toString()}`;
+
+        try {
+            const data = await API.fetchJson(url);
+            const tracks = data && data.playlist && Array.isArray(data.playlist.tracks)
+                ? data.playlist.tracks.slice(0, limit)
+                : [];
+
+            if (tracks.length === 0) throw new Error("No tracks found");
+
+            return tracks.map(track => ({
+                id: track.id,
+                name: track.name,
+                artist: Array.isArray(track.ar) ? track.ar.map(artist => artist.name).join(" / ") : "",
+                source: "netease",
+                lyric_id: track.id,
+                pic_id: track.al?.pic_str || track.al?.pic || track.al?.picUrl || "",
+            }));
+        } catch (error) {
+            console.error("API request failed:", error);
+            throw error;
+        }
+    },
 
     getSongUrl: (song, quality = "320") => {
         const signature = API.generateSignature();
         return `${API.baseUrl}?types=url&id=${song.id}&source=${song.source || "netease"}&br=${quality}&s=${signature}`;
     },
 
-      getLyric: async (song) => {
-    const signature = API.generateSignature();
-    let url = `${API.baseUrl}?types=lyric&id=${song.lyric_id || song.id}&source=${song.source || "netease"}&s=${signature}`;
-    
-    try {
-      debugLog(`歌词API请求: ${url}`);
-      const data = await API.fetchJson(url);
-      debugLog(`歌词API响应: ${JSON.stringify(data).substring(0, 200)}...`);
-      return data;
-    } catch (error) {
-      // 如果默认API失败，尝试下一个备用API
-      if (API.currentBackupIndex < API.backupUrls.length - 1) {
-        API.currentBackupIndex++;
-        const backupUrl = API.backupUrls[API.currentBackupIndex];
-        url = url.replace(API.baseUrl, backupUrl);
-        return API.getLyric(song);
-      } else {
-        throw error;
-      }
+    getLyric: (song) => {
+        const signature = API.generateSignature();
+        return `${API.baseUrl}?types=lyric&id=${song.lyric_id || song.id}&source=${song.source || "netease"}&s=${signature}`;
+    },
+
+    getPicUrl: (song) => {
+        const signature = API.generateSignature();
+        return `${API.baseUrl}?types=pic&id=${song.pic_id}&source=${song.source || "netease"}&size=300&s=${signature}`;
     }
-  },
 };
 
 Object.freeze(API);
@@ -5602,18 +5561,13 @@ function updateOnlineHighlight() {
 }
 
 const EXPLORE_RADAR_GENRES = [
-    "流行",
-    "摇滚",
-    "古典音乐",
-    "民谣",
-    "电子",
-    "爵士",
-    "说唱",
-    "乡村",
-    "蓝调",
-    "R&B",
-    "金属",
-    "嘻哈",
+    "华语流行",
+    "粤语",
+    "古风",
+    "抖音",
+    "华语",
+    "90后",
+    "00后",
     "轻音乐",
 ];
 
