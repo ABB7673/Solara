@@ -5566,8 +5566,8 @@ const EXPLORE_RADAR_GENRES = [
     "古风",
     "抖音",
     "华语",
-    "1990",
-    "2000",
+    "1990年代",
+    "2000年代",
     "轻音乐",
 ];
 
@@ -5618,7 +5618,7 @@ async function exploreOnlineMusic() {
 
         const randomGenre = pickRandomExploreGenre();
         const source = pickRandomExploreSource();
-        const results = await API.search(randomGenre, source, 200, 1);
+        const results = await API.search(randomGenre, source, 100, 1);
 
         if (!Array.isArray(results) || results.length === 0) {
             showNotification("探索雷达：未找到歌曲", "error");
