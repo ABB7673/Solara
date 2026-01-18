@@ -802,11 +802,59 @@ const savedCurrentPlaylist = (() => {
 })();
 
 // API配置 - 修复API地址和请求方式
+// API 音源配置 - 添加多个备用源
+const API_SOURCES = [
+    "https://music.gdstudio.xyz",           // 默认源
+    "https://api.i-meto.com/meting/api",    // 备用源1
+    "https://api.injahow.cn/meting",        // 备用源2
+    "https://api.paugram.com/meting",       // 备用源3
+    "https://music.cyrilstudio.top/api"     // 备用源4
+];
+
+// 歌词 API 配置
+const LYRICS_SOURCES = [
+    "https://music.gdstudio.xyz",           // 默认源
+    "https://api.lyrics.lol",               // 备用源1
+    "https://api.i-meto.com/meting/api",    // 备用源2
+    "https://api.paugram.com/meting",       // 备用源3
+    "https://api.injahow.cn/meting"         // 备用源4
+];
+
+// 当前使用的 API 源索引
+let currentApiSourceIndex = 0;
+let currentLyricsSourceIndex = 0;
+
+// 获取当前 API 源
+function getCurrentApiSource() {
+    return API_SOURCES[currentApiSourceIndex] || API_SOURCES[0];
+}
+
+// 获取当前歌词源
+function getCurrentLyricsSource() {
+    return LYRICS_SOURCES[currentLyricsSourceIndex] || LYRICS_SOURCES[0];
+}
+
+// 切换到下一个 API 源
+function switchToNextApiSource() {
+    currentApiSourceIndex = (currentApiSourceIndex + 1) % API_SOURCES.length;
+    console.log(`已切换到 API 源: ${getCurrentApiSource()}`);
+    showNotification(`已切换到备用音源 ${currentApiSourceIndex}`, "info");
+}
+
+// 切换到下一个歌词源
+function switchToNextLyricsSource() {
+    currentLyricsSourceIndex = (currentLyricsSourceIndex + 1) % LYRICS_SOURCES.length;
+    console.log(`已切换到歌词源: ${getCurrentLyricsSource()}`);
+    showNotification(`已切换到备用歌词源 ${currentLyricsSourceIndex}`, "info");
+}
+
 const API = {
     baseUrl: getCurrentApiSource(),  // 改为动态获取
+
     generateSignature: () => {
         return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     },
+
     fetchJson: async (url) => {
         try {
             const response = await fetch(url, {
@@ -814,9 +862,11 @@ const API = {
                     "Accept": "application/json",
                 },
             });
+
             if (!response.ok) {
                 throw new Error(`Request failed with status ${response.status}`);
             }
+
             const text = await response.text();
             try {
                 return JSON.parse(text);
@@ -829,106 +879,61 @@ const API = {
             throw error;
         }
     },
+
     search: async (keyword, source = "netease", count = 20, page = 1) => {
-        let lastError = null;
-        
-        // 尝试多个 API 源
-        for (let attempt = 0; attempt < API_SOURCES.length; attempt++) {
-            try {
-                const signature = API.generateSignature();
-                const baseUrl = getCurrentApiSource();
-                const url = `${baseUrl}?types=search&source=${source}&name=${encodeURIComponent(keyword)}&count=${count}&pages=${page}&s=${signature}`;
-                debugLog(`API请求: ${url}`);
-                const data = await API.fetchJson(url);
-                debugLog(`API响应: ${JSON.stringify(data).substring(0, 200)}...`);
-                if (!Array.isArray(data)) throw new Error("搜索结果格式错误");
-                return data.map(song => ({
-                    id: song.id,
-                    name: song.name,
-                    artist: song.artist,
-                    album: song.album,
-                    pic_id: song.pic_id,
-                    url_id: song.url_id,
-                    lyric_id: song.lyric_id,
-                    source: song.source,
-                }));
-            } catch (error) {
-                lastError = error;
-                console.warn(`API 源 ${currentApiSourceIndex} 搜索失败:`, error);
-                debugLog(`API 源 ${currentApiSourceIndex} 搜索失败: ${error.message}`);
-                
-                // 如果还有其他源，切换到下一个
-                if (attempt < API_SOURCES.length - 1) {
-                    switchToNextApiSource();
-                } else {
-                    throw lastError;
-                }
-            }
-        }
-    },
-    getRadarPlaylist: async (playlistId = "3778678", options = {}) => {
         const signature = API.generateSignature();
-        let limit = 50;
-        let offset = 0;
-        if (typeof options === "number") {
-            limit = options;
-        } else if (options && typeof options === "object") {
-            if (Number.isFinite(options.limit)) {
-                limit = options.limit;
-            } else if (Number.isFinite(options.count)) {
-                limit = options.count;
-            }
-            if (Number.isFinite(options.offset)) {
-                offset = options.offset;
-            }
-        }
-        limit = Math.max(1, Math.min(200, Math.trunc(limit)) || 50);
-        offset = Math.max(0, Math.trunc(offset) || 0);
-        const params = new URLSearchParams({
-            types: "playlist",
-            id: playlistId,
-            limit: String(limit),
-            offset: String(offset),
-            s: signature,
-        });
         const baseUrl = getCurrentApiSource();
-        const url = `${baseUrl}?${params.toString()}`;
+        const url = `${baseUrl}?types=search&source=${source}&name=${encodeURIComponent(keyword)}&count=${count}&pages=${page}&s=${signature}`;
+
         try {
+            debugLog(`API 请求: ${url}`);
             const data = await API.fetchJson(url);
-            const tracks = data && data.playlist && Array.isArray(data.playlist.tracks)
-                ? data.playlist.tracks.slice(0, limit)
-                : [];
-            if (tracks.length === 0) throw new Error("No tracks found");
-            return tracks.map(track => ({
-                id: track.id,
-                name: track.name,
-                artist: Array.isArray(track.ar) ? track.ar.map(artist => artist.name).join(" / ") : "",
-                source: "netease",
-                lyric_id: track.id,
-                pic_id: track.al?.pic_str || track.al?.pic || track.al?.picUrl || "",
+            debugLog(`API 响应: ${JSON.stringify(data).substring(0, 200)}...`);
+
+            if (!Array.isArray(data)) {
+                throw new Error("搜索结果格式错误");
+            }
+
+            return data.map(song => ({
+                id: song.id,
+                name: song.name,
+                artist: song.artist,
+                album: song.album,
+                pic_id: song.pic_id,
+                url_id: song.url_id,
+                lyric_id: song.lyric_id,
+                source: song.source,
             }));
         } catch (error) {
-            console.error("API request failed:", error);
+            console.error(`API 错误: ${error.message}`);
+            debugLog(`API 错误: ${error.message}`);
+            
+            // 失败时切换到下一个源
+            switchToNextApiSource();
             throw error;
         }
     },
+
+    // ... 其他方法保持不变 ...
+
     getSongUrl: (song, quality = "320") => {
         const signature = API.generateSignature();
         const baseUrl = getCurrentApiSource();
         return `${baseUrl}?types=url&id=${song.id}&source=${song.source || "netease"}&br=${quality}&s=${signature}`;
     },
+
     getLyric: (song) => {
         const signature = API.generateSignature();
         const baseUrl = getCurrentLyricsSource();  // 使用歌词源
         return `${baseUrl}?types=lyric&id=${song.lyric_id || song.id}&source=${song.source || "netease"}&s=${signature}`;
     },
+
     getPicUrl: (song) => {
         const signature = API.generateSignature();
         const baseUrl = getCurrentApiSource();
         return `${baseUrl}?types=pic&id=${song.pic_id}&source=${song.source || "netease"}&size=300&s=${signature}`;
     }
 };
-Object.freeze(API);
 
 const state = {
     onlineSongs: [],
