@@ -5,23 +5,23 @@
 
     // 主题和字体大小管理器
     const ThemeManager = {
-        themes: [
-            { id: 'white', name: '经典白', class: 'theme-white' },
-            { id: 'black', name: '深邃黑', class: 'theme-black' },
-            { id: 'light-blue', name: '淡蓝色', class: 'theme-light-blue' },
-            { id: 'light-green', name: '淡绿色', class: 'theme-light-green' },
-            { id: 'huawei-1', name: '华为红', class: 'theme-huawei-1' },
-            { id: 'huawei-2', name: '华为蓝', class: 'theme-huawei-2' },
-            { id: 'ios-1', name: 'iOS浅色', class: 'theme-ios-1' },
-            { id: 'ios-2', name: 'iOS深色', class: 'theme-ios-2' }
-        ],
-        
-        fontSizes: [
-            { id: 'small', name: '小', class: 'font-small' },
-            { id: 'normal', name: '中', class: 'font-normal' },
-            { id: 'large', name: '大', class: 'font-large' },
-            { id: 'xlarge', name: '特大', class: 'font-xlarge' }
-        ],
+    themes: [
+        { id: 'white', name: '白色', class: 'theme-white' },
+        { id: 'black', name: '黑色', class: 'theme-black' },
+        { id: 'gray', name: '灰色', class: 'theme-gray' },
+        { id: 'purple', name: '紫色', class: 'theme-purple' },
+        { id: 'blue', name: '蓝色', class: 'theme-blue' },
+        { id: 'green', name: '绿色', class: 'theme-green' },
+        { id: 'red', name: '红色', class: 'theme-red' },
+        { id: 'orange', name: '橙色', class: 'theme-orange' }
+    ],
+    
+    fontSizes: [
+        { id: 'small', name: '小', class: 'font-small' },
+        { id: 'normal', name: '中', class: 'font-normal' },
+        { id: 'large', name: '大', class: 'font-large' },
+        { id: 'xlarge', name: '特大', class: 'font-xlarge' }
+    ],
 
         panel: null,
 
