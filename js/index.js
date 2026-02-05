@@ -728,7 +728,7 @@ const savedVolume = (() => {
 
 const savedSearchSource = (() => {
     const stored = safeGetLocalStorage("searchSource");
-    return normalizeSource(stored);
+    return normalizeSource(stored) || "kuwo"; // 默认酷我音乐
 })();
 
 const LAST_SEARCH_STATE_STORAGE_KEY = "lastSearchState.v1";
@@ -939,6 +939,9 @@ const state = {
     currentGradient: '',
     isMobileInlineLyricsOpen: false,
     selectedSearchResults: new Set(),
+    searchType: "song", // 'song' 或 'playlist'
+    collectedPlaylists: [], // 收藏的歌单
+    currentPlaylistCollection: [], // 当前播放的歌单歌曲
 };
 
 let importSelectedMenuOutsideHandler = null;
@@ -2862,6 +2865,42 @@ window.addEventListener("load", setupInteractions);
 // 避免与媒体会话的结束回调重复触发自动播放。
 if (!("mediaSession" in navigator)) {
     dom.audioPlayer.addEventListener("ended", autoPlayNext);
+}
+
+// 搜索类型切换
+const searchTypeBtn = document.getElementById('searchTypeBtn');
+const searchTypeMenu = document.getElementById('searchTypeMenu');
+const searchTypeLabel = document.getElementById('searchTypeLabel');
+
+if (searchTypeBtn && searchTypeMenu) {
+    searchTypeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        searchTypeMenu.classList.toggle('show');
+    });
+    
+    searchTypeMenu.querySelectorAll('.search-type-option').forEach(option => {
+        option.addEventListener('click', () => {
+            state.searchType = option.dataset.type;
+            searchTypeLabel.textContent = option.dataset.type === 'song' ? '歌曲' : '歌单';
+            searchTypeMenu.querySelectorAll('.search-type-option').forEach(o => o.classList.remove('active'));
+            option.classList.add('active');
+            searchTypeMenu.classList.remove('show');
+            
+            // 更新搜索提示
+            if (state.searchType === 'playlist') {
+                dom.searchInput.placeholder = "搜索歌单...";
+            } else {
+                dom.searchInput.placeholder = "搜索歌曲、歌手或专辑...";
+            }
+        });
+    });
+    
+    // 点击外部关闭
+    document.addEventListener('click', (e) => {
+        if (!searchTypeMenu.contains(e.target) && e.target !== searchTypeBtn) {
+            searchTypeMenu.classList.remove('show');
+        }
+    });
 }
 
 function setupInteractions() {
@@ -5594,95 +5633,61 @@ function pickRandomExploreSource() {
 async function exploreOnlineMusic() {
     const desktopButton = dom.loadOnlineBtn;
     const mobileButton = dom.mobileExploreButton;
-    const btnText = desktopButton ? desktopButton.querySelector(".btn-text") : null;
-    const loader = desktopButton ? desktopButton.querySelector(".loader") : null;
-
-    const setLoadingState = (isLoading) => {
+    
+    // 设置加载状态
+    const setLoading = (loading) => {
         if (desktopButton) {
-            desktopButton.disabled = isLoading;
-            desktopButton.classList.toggle("is-loading", Boolean(isLoading));
-            if (btnText) {
-                btnText.style.display = isLoading ? "none" : "";
-            }
-            if (loader) {
-                loader.style.display = isLoading ? "inline-flex" : "none";
-            }
+            desktopButton.disabled = loading;
+            desktopButton.innerHTML = loading ? 
+                '<span class="loader"></span><span>加载中...</span>' : 
+                '<span class="btn-text"><i class="fas fa-satellite-dish"></i> 探索雷达</span><span class="loader" style="display: none;"></span>';
         }
         if (mobileButton) {
-            mobileButton.disabled = isLoading;
-            mobileButton.setAttribute("aria-disabled", isLoading ? "true" : "false");
+            mobileButton.disabled = loading;
         }
     };
 
     try {
-        setLoadingState(true);
-
-        const randomGenre = pickRandomExploreGenre();
-        const source = pickRandomExploreSource();
-        const results = await API.search(randomGenre, source, 100, 1);
-
-        if (!Array.isArray(results) || results.length === 0) {
-            showNotification("探索雷达：未找到歌曲", "error");
-            debugLog(`探索雷达未找到歌曲，关键词：${randomGenre}，音源：${source}`);
+        setLoading(true);
+        
+        // 使用多种关键词随机探索
+        const keywords = ["热门", "流行", "新歌", "经典", "华语", "欧美", "抖音", "网络"];
+        const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
+        
+        // 默认使用酷我音源探索
+        const results = await API.search(randomKeyword, "kuwo", 30, 1);
+        
+        if (!results || results.length === 0) {
+            showNotification("探索雷达未找到歌曲", "error");
             return;
         }
-
-        const normalizedSongs = results.map((song) => ({
-            id: song.id,
-            name: song.name,
-            artist: Array.isArray(song.artist) ? song.artist.join(" / ") : (song.artist || "未知艺术家"),
-            album: song.album || "",
-            source: song.source || source,
-            lyric_id: song.lyric_id || song.id,
-            pic_id: song.pic_id || song.pic || "",
-            url_id: song.url_id,
-        }));
-
-        const existingSongs = Array.isArray(state.playlistSongs) ? state.playlistSongs.slice() : [];
-        const existingKeys = new Set(existingSongs
-            .map((song) => getSongKey(song))
-            .filter((key) => typeof key === "string" && key.length > 0));
-
-        const appendedSongs = [];
-        for (const song of normalizedSongs) {
+        
+        // 添加到播放列表
+        const newSongs = results.filter(song => {
             const key = getSongKey(song);
-            if (key && existingKeys.has(key)) {
-                continue;
-            }
-            appendedSongs.push(song);
-            if (key) {
-                existingKeys.add(key);
-            }
-        }
-
-        if (appendedSongs.length === 0) {
-            showNotification("探索雷达：本次未找到新的歌曲，当前列表已包含这些曲目", "info");
-            debugLog(`探索雷达无新增歌曲，关键词：${randomGenre}`);
+            return !state.playlistSongs.some(s => getSongKey(s) === key);
+        });
+        
+        if (newSongs.length === 0) {
+            showNotification("探索雷达：当前列表已包含这些歌曲", "info");
             return;
         }
-
-        state.playlistSongs = existingSongs.concat(appendedSongs);
-        state.onlineSongs = state.playlistSongs.slice();
-        state.currentPlaylist = "playlist";
-        state.currentList = "playlist";
-
+        
+        state.playlistSongs.push(...newSongs);
         renderPlaylist();
-        updatePlaylistHighlight();
-
-        showNotification(`探索雷达：新增${appendedSongs.length}首 ${randomGenre} 歌曲`);
-        debugLog(`探索雷达加载成功，关键词：${randomGenre}，音源：${source}，新增歌曲数：${appendedSongs.length}`);
-
-        const shouldAutoplay = existingSongs.length === 0 && state.playlistSongs.length > 0;
-        if (shouldAutoplay) {
+        
+        showNotification(`探索雷达：新增 ${newSongs.length} 首歌曲`);
+        
+        // 如果是空列表，自动播放第一首
+        if (state.playlistSongs.length === newSongs.length && state.playlistSongs.length > 0) {
             await playPlaylistSong(0);
-        } else {
-            savePlayerState();
         }
+        
     } catch (error) {
-        console.error("探索雷达错误:", error);
-        showNotification("探索雷达获取失败，请稍后重试", "error");
+        console.error("探索雷达失败:", error);
+        showNotification("探索雷达获取失败", "error");
     } finally {
-        setLoadingState(false);
+        setLoading(false);
     }
 }
 
@@ -5968,3 +5973,116 @@ function showNotification(message, type = "success") {
         notification.classList.remove("show");
     }, 3000);
 }
+
+// 歌单收藏功能
+function togglePlaylistCollectionView() {
+    const btn = document.getElementById('playlistCollectionBtn');
+    const list = document.getElementById('playlistCollectionList');
+    const playlist = document.getElementById('playlist');
+    const favorites = document.getElementById('favorites');
+    
+    if (!btn || !list) return;
+    
+    const isActive = btn.classList.contains('active');
+    
+    if (isActive) {
+        // 关闭歌单收藏视图
+        btn.classList.remove('active');
+        list.classList.remove('active');
+        playlist.classList.add('active');
+        favorites.classList.remove('active');
+    } else {
+        // 打开歌单收藏视图
+        btn.classList.add('active');
+        list.classList.add('active');
+        playlist.classList.remove('active');
+        favorites.classList.remove('active');
+        renderCollectedPlaylists();
+    }
+}
+
+function renderCollectedPlaylists() {
+    const container = document.getElementById('playlistCollectionItems');
+    if (!container) return;
+    
+    if (state.collectedPlaylists.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.5); padding: 40px;">暂无收藏的歌单</div>';
+        return;
+    }
+    
+    container.innerHTML = state.collectedPlaylists.map((playlist, index) => `
+        <div class="playlist-collection-item" data-index="${index}">
+            <div class="playlist-collection-cover">
+                ${playlist.cover ? `<img src="${playlist.cover}" alt="">` : '<i class="fas fa-music" style="font-size: 24px; color: rgba(255,255,255,0.5);"></i>'}
+            </div>
+            <div class="playlist-collection-info">
+                <div class="playlist-collection-name">${playlist.name}</div>
+                <div class="playlist-collection-count">${playlist.count || 0} 首歌曲</div>
+            </div>
+            <button class="playlist-collection-play" onclick="playCollectedPlaylist(${index})">
+                <i class="fas fa-play"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function addPlaylistToCollection(playlistData) {
+    const exists = state.collectedPlaylists.some(p => p.id === playlistData.id);
+    if (exists) {
+        showNotification("该歌单已在收藏中", "warning");
+        return false;
+    }
+    
+    state.collectedPlaylists.push({
+        id: playlistData.id,
+        name: playlistData.name,
+        cover: playlistData.cover,
+        count: playlistData.count || 0,
+        songs: playlistData.songs || []
+    });
+    
+    safeSetLocalStorage("collectedPlaylists", JSON.stringify(state.collectedPlaylists));
+    showNotification("歌单收藏成功", "success");
+    return true;
+}
+
+function removeCollectedPlaylist(index) {
+    state.collectedPlaylists.splice(index, 1);
+    safeSetLocalStorage("collectedPlaylists", JSON.stringify(state.collectedPlaylists));
+    renderCollectedPlaylists();
+    showNotification("已取消收藏", "success");
+}
+
+async function playCollectedPlaylist(index) {
+    const playlist = state.collectedPlaylists[index];
+    if (!playlist) return;
+    
+    if (playlist.songs && playlist.songs.length > 0) {
+        state.playlistSongs = [...playlist.songs];
+        renderPlaylist();
+        await playPlaylistSong(0);
+        if (isMobileView) {
+            closeMobilePanel();
+        }
+    } else {
+        showNotification("歌单为空", "error");
+    }
+}
+
+// 初始化歌单收藏按钮事件
+function initPlaylistCollection() {
+    const btn = document.getElementById('playlistCollectionBtn');
+    if (btn) {
+        btn.addEventListener('click', togglePlaylistCollectionView);
+    }
+    
+    // 加载已收藏的歌单
+    const saved = safeGetLocalStorage("collectedPlaylists");
+    if (saved) {
+        state.collectedPlaylists = parseJSON(saved, []);
+    }
+}
+
+// 在 setupInteractions 中调用 initPlaylistCollection
+// 在 setupInteractions 函数末尾添加：
+initPlaylistCollection();
