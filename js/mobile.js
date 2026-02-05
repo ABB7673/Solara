@@ -303,7 +303,7 @@
         if (!dom.mobileToolbarTitle) {
             return;
         }
-        dom.mobileToolbarTitle.textContent = "solar";
+        dom.mobileToolbarTitle.textContent = "Solara";
     }
 
     function updateMobileOverlayScrim() {
