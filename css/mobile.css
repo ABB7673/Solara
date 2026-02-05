@@ -1,397 +1,756 @@
-/* ===== 主题变量系统 ===== */
+/* ===== 主题变量 - 默认白色 ===== */
 :root {
-    /* 字体大小 - 使用相对单位 */
-    --font-size-base: 16px;
+    /* 字体大小 */
     --font-size-small: 14px;
     --font-size-normal: 16px;
     --font-size-large: 18px;
     --font-size-xlarge: 20px;
     
     /* 默认白色主题 */
-    --mobile-bg: radial-gradient(120% 140% at 50% 0%, #f5f7fa 0%, #e8ecf1 70%, #dfe4ea 100%);
-    --mobile-container-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 247, 250, 0.95));
-    --mobile-text-color: #2c3e50;
-    --mobile-text-secondary: #7f8c8d;
-    --mobile-border-color: rgba(0, 0, 0, 0.08);
-    --mobile-button-bg: rgba(255, 255, 255, 0.9);
-    --mobile-primary-color: #1abc9c;
-    --mobile-panel-bg: rgba(255, 255, 255, 0.96);
-    --mobile-item-bg: rgba(0, 0, 0, 0.03);
-    --mobile-hover-bg: rgba(26, 188, 156, 0.1);
-    --mobile-shadow: rgba(0, 0, 0, 0.08);
-    --mobile-overlay-bg: rgba(0, 0, 0, 0.4);
+    --bg-color: #ffffff;
+    --bg-gradient: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --primary-color: #1abc9c;
+    --button-bg: #ffffff;
+    --button-border: rgba(0,0,0,0.1);
+    --panel-bg: #ffffff;
+    --item-bg: rgba(0,0,0,0.03);
+    --hover-bg: rgba(26,188,156,0.1);
+    --shadow: rgba(0,0,0,0.1);
 }
 
-/* 字体大小类 - 通过改变根元素字体大小实现全局缩放 */
-body.mobile-view.font-small {
-    font-size: var(--font-size-small);
-}
-
-body.mobile-view.font-normal {
-    font-size: var(--font-size-normal);
-}
-
-body.mobile-view.font-large {
-    font-size: var(--font-size-large);
-}
-
-body.mobile-view.font-xlarge {
-    font-size: var(--font-size-xlarge);
-}
-
-/* 黑色主题 */
+/* 主题类 */
 body.mobile-view.theme-black {
-    --mobile-bg: radial-gradient(120% 140% at 50% 0%, #1b1d24 0%, #0d1018 70%, #05070c 100%);
-    --mobile-container-bg: linear-gradient(180deg, rgba(27, 29, 36, 0.98), rgba(7, 9, 14, 0.95));
-    --mobile-text-color: #f2f5f9;
-    --mobile-text-secondary: #95a5a6;
-    --mobile-border-color: rgba(255, 255, 255, 0.12);
-    --mobile-button-bg: rgba(255, 255, 255, 0.08);
-    --mobile-primary-color: #1abc9c;
-    --mobile-panel-bg: rgba(13, 16, 24, 0.98);
-    --mobile-item-bg: rgba(255, 255, 255, 0.05);
-    --mobile-hover-bg: rgba(26, 188, 156, 0.2);
-    --mobile-shadow: rgba(0, 0, 0, 0.4);
-    --mobile-overlay-bg: rgba(0, 0, 0, 0.6);
+    --bg-color: #0d0d0d;
+    --bg-gradient: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a0;
+    --primary-color: #1abc9c;
+    --button-bg: rgba(255,255,255,0.1);
+    --button-border: rgba(255,255,255,0.2);
+    --panel-bg: #1a1a1a;
+    --item-bg: rgba(255,255,255,0.05);
+    --hover-bg: rgba(255,255,255,0.1);
+    --shadow: rgba(0,0,0,0.5);
 }
 
-/* 淡蓝色主题 */
-body.mobile-view.theme-light-blue {
-    --mobile-bg: radial-gradient(120% 140% at 50% 0%, #e3f2fd 0%, #bbdefb 70%, #90caf9 100%);
-    --mobile-container-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(227, 242, 253, 0.95));
-    --mobile-text-color: #1565c0;
-    --mobile-text-secondary: #607d8b;
-    --mobile-border-color: rgba(33, 150, 243, 0.2);
-    --mobile-button-bg: rgba(255, 255, 255, 0.9);
-    --mobile-primary-color: #2196f3;
-    --mobile-panel-bg: rgba(255, 255, 255, 0.96);
-    --mobile-item-bg: rgba(33, 150, 243, 0.08);
-    --mobile-hover-bg: rgba(33, 150, 243, 0.15);
-    --mobile-shadow: rgba(33, 150, 243, 0.15);
-    --mobile-overlay-bg: rgba(21, 101, 192, 0.4);
+body.mobile-view.theme-gray {
+    --bg-color: #f5f5f5;
+    --bg-gradient: linear-gradient(180deg, #fafafa 0%, #e0e0e0 100%);
+    --text-primary: #424242;
+    --text-secondary: #757575;
+    --primary-color: #607d8b;
+    --button-bg: #ffffff;
+    --button-border: rgba(0,0,0,0.1);
+    --panel-bg: #ffffff;
+    --item-bg: rgba(0,0,0,0.03);
+    --hover-bg: rgba(96,125,139,0.1);
+    --shadow: rgba(0,0,0,0.1);
 }
 
-/* 淡绿色主题 */
-body.mobile-view.theme-light-green {
-    --mobile-bg: radial-gradient(120% 140% at 50% 0%, #e8f5e9 0%, #c8e6c9 70%, #a5d6a7 100%);
-    --mobile-container-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(232, 245, 233, 0.95));
-    --mobile-text-color: #2e7d32;
-    --mobile-text-secondary: #689f38;
-    --mobile-border-color: rgba(76, 175, 80, 0.2);
-    --mobile-button-bg: rgba(255, 255, 255, 0.9);
-    --mobile-primary-color: #4caf50;
-    --mobile-panel-bg: rgba(255, 255, 255, 0.96);
-    --mobile-item-bg: rgba(76, 175, 80, 0.08);
-    --mobile-hover-bg: rgba(76, 175, 80, 0.15);
-    --mobile-shadow: rgba(76, 175, 80, 0.15);
-    --mobile-overlay-bg: rgba(46, 125, 50, 0.4);
+body.mobile-view.theme-purple {
+    --bg-color: #f3e5f5;
+    --bg-gradient: linear-gradient(180deg, #f3e5f5 0%, #e1bee7 100%);
+    --text-primary: #4a148c;
+    --text-secondary: #7b1fa2;
+    --primary-color: #9c27b0;
+    --button-bg: #ffffff;
+    --button-border: rgba(156,39,176,0.3);
+    --panel-bg: #ffffff;
+    --item-bg: rgba(156,39,176,0.05);
+    --hover-bg: rgba(156,39,176,0.1);
+    --shadow: rgba(156,39,176,0.15);
 }
 
-/* 华为风格主题1 - EMUI经典 */
-body.mobile-view.theme-huawei-1 {
-    --mobile-bg: linear-gradient(135deg, #f6f8fb 0%, #e9edf5 100%);
-    --mobile-container-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 248, 251, 0.95));
-    --mobile-text-color: #333333;
-    --mobile-text-secondary: #666666;
-    --mobile-border-color: rgba(0, 0, 0, 0.06);
-    --mobile-button-bg: #ffffff;
-    --mobile-primary-color: #cf0a2c;
-    --mobile-panel-bg: rgba(255, 255, 255, 0.98);
-    --mobile-item-bg: #f2f3f5;
-    --mobile-hover-bg: rgba(207, 10, 44, 0.08);
-    --mobile-shadow: rgba(0, 0, 0, 0.06);
-    --mobile-overlay-bg: rgba(0, 0, 0, 0.5);
+body.mobile-view.theme-blue {
+    --bg-color: #e3f2fd;
+    --bg-gradient: linear-gradient(180deg, #e3f2fd 0%, #bbdefb 100%);
+    --text-primary: #0d47a1;
+    --text-secondary: #1976d2;
+    --primary-color: #2196f3;
+    --button-bg: #ffffff;
+    --button-border: rgba(33,150,243,0.3);
+    --panel-bg: #ffffff;
+    --item-bg: rgba(33,150,243,0.05);
+    --hover-bg: rgba(33,150,243,0.1);
+    --shadow: rgba(33,150,243,0.15);
 }
 
-/* 华为风格主题2 - HarmonyOS */
-body.mobile-view.theme-huawei-2 {
-    --mobile-bg: linear-gradient(135deg, #f0f2f5 0%, #e6e9f0 100%);
-    --mobile-container-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 242, 245, 0.95));
-    --mobile-text-color: #1a1a1a;
-    --mobile-text-secondary: #666666;
-    --mobile-border-color: rgba(0, 0, 0, 0.08);
-    --mobile-button-bg: linear-gradient(135deg, #ffffff, #f5f7fa);
-    --mobile-primary-color: #007dff;
-    --mobile-panel-bg: rgba(255, 255, 255, 0.98);
-    --mobile-item-bg: #f5f7fa;
-    --mobile-hover-bg: rgba(0, 125, 255, 0.1);
-    --mobile-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --mobile-overlay-bg: rgba(0, 0, 0, 0.5);
+body.mobile-view.theme-green {
+    --bg-color: #e8f5e9;
+    --bg-gradient: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%);
+    --text-primary: #1b5e20;
+    --text-secondary: #388e3c;
+    --primary-color: #4caf50;
+    --button-bg: #ffffff;
+    --button-border: rgba(76,175,80,0.3);
+    --panel-bg: #ffffff;
+    --item-bg: rgba(76,175,80,0.05);
+    --hover-bg: rgba(76,175,80,0.1);
+    --shadow: rgba(76,175,80,0.15);
 }
 
-/* 苹果风格主题1 - iOS Light */
-body.mobile-view.theme-ios-1 {
-    --mobile-bg: #f2f2f7;
-    --mobile-container-bg: #ffffff;
-    --mobile-text-color: #000000;
-    --mobile-text-secondary: #8e8e93;
-    --mobile-border-color: rgba(0, 0, 0, 0.1);
-    --mobile-button-bg: #ffffff;
-    --mobile-primary-color: #007aff;
-    --mobile-panel-bg: rgba(255, 255, 255, 0.98);
-    --mobile-item-bg: #f2f2f7;
-    --mobile-hover-bg: rgba(0, 122, 255, 0.1);
-    --mobile-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    --mobile-overlay-bg: rgba(0, 0, 0, 0.4);
+body.mobile-view.theme-red {
+    --bg-color: #ffebee;
+    --bg-gradient: linear-gradient(180deg, #ffebee 0%, #ffcdd2 100%);
+    --text-primary: #b71c1c;
+    --text-secondary: #d32f2f;
+    --primary-color: #f44336;
+    --button-bg: #ffffff;
+    --button-border: rgba(244,67,54,0.3);
+    --panel-bg: #ffffff;
+    --item-bg: rgba(244,67,54,0.05);
+    --hover-bg: rgba(244,67,54,0.1);
+    --shadow: rgba(244,67,54,0.15);
 }
 
-/* 苹果风格主题2 - iOS Dark */
-body.mobile-view.theme-ios-2 {
-    --mobile-bg: #000000;
-    --mobile-container-bg: #1c1c1e;
-    --mobile-text-color: #ffffff;
-    --mobile-text-secondary: #8e8e93;
-    --mobile-border-color: rgba(255, 255, 255, 0.15);
-    --mobile-button-bg: #2c2c2e;
-    --mobile-primary-color: #0a84ff;
-    --mobile-panel-bg: rgba(28, 28, 30, 0.98);
-    --mobile-item-bg: #2c2c2e;
-    --mobile-hover-bg: rgba(10, 132, 255, 0.2);
-    --mobile-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    --mobile-overlay-bg: rgba(0, 0, 0, 0.6);
+body.mobile-view.theme-orange {
+    --bg-color: #fff3e0;
+    --bg-gradient: linear-gradient(180deg, #fff3e0 0%, #ffe0b2 100%);
+    --text-primary: #e65100;
+    --text-secondary: #f57c00;
+    --primary-color: #ff9800;
+    --button-bg: #ffffff;
+    --button-border: rgba(255,152,0,0.3);
+    --panel-bg: #ffffff;
+    --item-bg: rgba(255,152,0,0.05);
+    --hover-bg: rgba(255,152,0,0.1);
+    --shadow: rgba(255,152,0,0.15);
 }
 
-/* ===== 基础移动端样式（保持原有布局，只添加主题色） ===== */
-html.mobile-view,
+/* 字体大小 */
+body.mobile-view.font-small { font-size: var(--font-size-small); }
+body.mobile-view.font-normal { font-size: var(--font-size-normal); }
+body.mobile-view.font-large { font-size: var(--font-size-large); }
+body.mobile-view.font-xlarge { font-size: var(--font-size-xlarge); }
+
+/* ===== 基础布局 - 强制全屏无圆角 ===== */
+html.mobile-view, 
 body.mobile-view {
-    background: var(--mobile-bg);
-    color: var(--mobile-text-color);
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    height: var(--mobile-vh, 100dvh);
+    overflow: hidden;
+    background: var(--bg-color);
+    background-image: var(--bg-gradient);
+    color: var(--text-primary);
+    font-family: 'Noto Sans SC', 'Segoe UI', Arial, sans-serif;
 }
 
-/* 保持原有容器样式，只改变颜色 */
+body.mobile-view {
+    display: flex;
+    flex-direction: column;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+}
+
+/* 容器 - 全屏无圆角 */
 body.mobile-view .container {
-    background: var(--mobile-container-bg);
-    box-shadow: 0 32px 90px var(--mobile-shadow);
+    width: 100vw;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* 隐藏桌面元素 */
+body.mobile-view .header,
+body.mobile-view .theme-switch-wrapper,
+body.mobile-view .warning {
+    display: none !important;
 }
 
 /* 工具栏 */
 body.mobile-view .mobile-toolbar {
-    margin-top: clamp(4px, 3vw, 12px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    flex-shrink: 0;
+    background: transparent;
 }
 
 body.mobile-view .mobile-toolbar__title {
-    color: var(--mobile-text-color);
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 body.mobile-view .mobile-toolbar__button {
-    background: var(--mobile-button-bg);
-    border-color: var(--mobile-border-color);
-    color: var(--mobile-text-color);
-    transition: all 0.25s ease;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--button-border);
+    background: var(--button-bg);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px var(--shadow);
 }
 
 body.mobile-view .mobile-toolbar__button:active {
-    background: var(--mobile-hover-bg);
-    border-color: var(--mobile-primary-color);
-    color: var(--mobile-primary-color);
+    transform: scale(0.95);
+    opacity: 0.8;
 }
 
-/* 转盘 */
+/* 主内容区 */
+body.mobile-view .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 16px;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* 封面区 */
+body.mobile-view .cover-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 16px 0;
+    min-height: 0;
+}
+
+body.mobile-view .mobile-turntable {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
+}
+
 body.mobile-view .mobile-turntable__platter {
-    background: radial-gradient(circle at 48% 50%, #1a1d25 0%, #05070c 65%, #000 100%);
-    box-shadow: 0 32px 70px rgba(0, 0, 0, 0.55);
+    width: min(60vw, 50vh);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #333, #000);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: spin 20s linear infinite;
+    animation-play-state: paused;
+}
+
+body.mobile-view.is-playing .mobile-turntable__platter {
+    animation-play-state: running;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+body.mobile-view .album-cover {
+    width: 60%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 0 0 4px rgba(0,0,0,0.3);
+}
+
+body.mobile-view .album-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 /* 歌曲信息 */
+body.mobile-view .current-song-info {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+body.mobile-view .current-song-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
 body.mobile-view .current-song-title {
-    color: var(--mobile-text-color);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 body.mobile-view .current-song-artist {
-    color: var(--mobile-text-secondary);
+    font-size: 1rem;
+    color: var(--text-secondary);
 }
 
-/* 音质按钮 */
 body.mobile-view .mobile-quality-chip {
-    background: var(--mobile-button-bg);
-    border-color: var(--mobile-border-color);
-    color: var(--mobile-text-secondary);
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 1px solid var(--button-border);
+    background: var(--button-bg);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    box-shadow: 0 2px 8px var(--shadow);
 }
 
 body.mobile-view .mobile-quality-chip.active {
-    background: linear-gradient(135deg, var(--mobile-primary-color), var(--mobile-primary-color));
-    color: #ffffff;
-    border-color: transparent;
-    box-shadow: 0 14px 32px var(--mobile-shadow);
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
-/* 控制按钮 */
+/* 内联歌词 */
+body.mobile-view .mobile-inline-lyrics {
+    display: none;
+    flex: 1;
+    background: var(--item-bg);
+    border-radius: 16px;
+    margin: 8px 0;
+    padding: 16px;
+    overflow: hidden;
+    flex-direction: column;
+}
+
+body.mobile-view.mobile-inline-lyrics-open .mobile-inline-lyrics {
+    display: flex;
+}
+
+body.mobile-view.mobile-inline-lyrics-open .mobile-turntable {
+    display: none;
+}
+
+body.mobile-view .mobile-inline-lyrics__scroll {
+    flex: 1;
+    overflow-y: auto;
+    text-align: center;
+}
+
+body.mobile-view .mobile-inline-lyrics__content > div {
+    padding: 8px;
+    color: var(--text-secondary);
+    transition: all 0.3s;
+}
+
+body.mobile-view .mobile-inline-lyrics__content .current {
+    color: var(--primary-color);
+    font-size: 1.1em;
+    font-weight: 600;
+    transform: scale(1.05);
+}
+
+/* 控制区 */
+body.mobile-view .controls {
+    padding: 16px;
+    background: transparent;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+body.mobile-view .transport-controls {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 12px;
+}
+
 body.mobile-view .transport-button {
-    background: var(--mobile-button-bg);
-    color: var(--mobile-text-color);
-    box-shadow: 0 12px 28px var(--mobile-shadow);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: var(--button-bg);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px var(--shadow);
+    transition: transform 0.2s;
+}
+
+body.mobile-view .transport-button:active {
+    transform: scale(0.95);
 }
 
 body.mobile-view .transport-button--play {
-    background: linear-gradient(135deg, #f36d6d 0%, #f3a25b 100%);
-    color: #1f1b1d;
+    width: 64px;
+    height: 64px;
+    background: var(--primary-color);
+    color: white;
+    font-size: 1.5rem;
 }
 
-/* 进度条 */
+body.mobile-view .progress-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 body.mobile-view .progress-container input[type="range"] {
-    background: linear-gradient(to right,
-        var(--mobile-primary-color) 0%,
-        var(--mobile-primary-color) var(--progress, 0%),
-        rgba(255, 255, 255, 0.15) var(--progress, 0%),
-        rgba(255, 255, 255, 0.15) 100%);
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--item-bg);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+body.mobile-view .progress-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 body.mobile-view .progress-container span {
-    color: var(--mobile-text-secondary);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    min-width: 40px;
+    text-align: center;
 }
 
-/* 播放列表面板 */
+/* 底部面板 */
 body.mobile-view .mobile-panel {
-    background: var(--mobile-panel-bg);
-    box-shadow: 0 -28px 60px var(--mobile-shadow);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 70vh;
+    background: var(--panel-bg);
+    border-radius: 24px 24px 0 0;
+    transform: translateY(110%);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    z-index: 400;
+    box-shadow: 0 -10px 40px var(--shadow);
+    max-width: 100vw;
+}
+
+body.mobile-view.mobile-panel-open .mobile-panel {
+    transform: translateY(0);
 }
 
 body.mobile-view .mobile-panel-header {
-    color: var(--mobile-text-color);
+    padding: 16px;
+    border-bottom: 1px solid var(--item-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-shrink: 0;
 }
 
 body.mobile-view .mobile-panel-handle {
-    background: var(--mobile-text-secondary);
-    opacity: 0.4;
+    width: 40px;
+    height: 4px;
+    background: var(--text-secondary);
+    opacity: 0.3;
+    border-radius: 2px;
+    margin: 0 auto;
 }
 
-body.mobile-view .mobile-panel-action-btn,
-body.mobile-view .mobile-close-btn {
-    background: var(--mobile-button-bg);
-    border-color: var(--mobile-border-color);
-    color: var(--mobile-text-color);
+body.mobile-view .mobile-panel-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-/* 播放列表项 */
+body.mobile-view .mobile-actions-group {
+    display: flex;
+    gap: 8px;
+}
+
+body.mobile-view .mobile-panel-action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--button-border);
+    background: var(--button-bg);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+body.mobile-view .playlist-tabs {
+    display: flex;
+    gap: 8px;
+}
+
+body.mobile-view .playlist-tab {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    background: var(--item-bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+body.mobile-view .playlist-tab.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+body.mobile-view .playlist,
+body.mobile-view .lyrics {
+    flex: 1;
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+}
+
+body.mobile-view .playlist.active,
+body.mobile-view .lyrics.active {
+    display: flex;
+}
+
+body.mobile-view .playlist-scroll,
+body.mobile-view .lyrics-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px;
+}
+
 body.mobile-view .playlist-items .playlist-item {
-    background: var(--mobile-item-bg);
-    color: var(--mobile-text-color);
+    padding: 14px 80px 14px 16px;
+    margin-bottom: 8px;
+    background: var(--item-bg);
+    border-radius: 12px;
+    color: var(--text-primary);
+    position: relative;
+    cursor: pointer;
+    border: 2px solid transparent;
 }
 
-body.mobile-view .playlist-items .playlist-item:hover,
 body.mobile-view .playlist-items .playlist-item.current {
-    background: var(--mobile-hover-bg);
-    color: var(--mobile-primary-color);
+    border-color: var(--primary-color);
+    background: var(--hover-bg);
+    color: var(--primary-color);
 }
 
-body.mobile-view .mobile-panel-clear-btn {
-    color: rgba(231, 76, 60, 0.85);
-    border-color: rgba(231, 76, 60, 0.28);
+body.mobile-view .playlist-item-favorite,
+body.mobile-view .playlist-item-download,
+body.mobile-view .playlist-item-remove {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
 }
+
+body.mobile-view .playlist-item-favorite { right: 56px; color: #ff4d67; }
+body.mobile-view .playlist-item-download { right: 28px; }
+body.mobile-view .playlist-item-remove { right: 4px; color: #e74c3c; }
 
 /* 搜索面板 */
 body.mobile-view .search-area {
-    background: var(--mobile-panel-bg);
+    position: fixed;
+    inset: 0;
+    background: var(--panel-bg);
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+}
+
+body.mobile-view.mobile-search-open .search-area {
+    transform: translateY(0);
 }
 
 body.mobile-view .search-container {
-    background: var(--mobile-item-bg);
-    border-color: var(--mobile-border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 0;
 }
 
 body.mobile-view .search-input {
-    color: var(--mobile-text-color);
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--button-border);
+    background: var(--item-bg);
+    color: var(--text-primary);
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 body.mobile-view .search-input::placeholder {
-    color: var(--mobile-text-secondary);
+    color: var(--text-secondary);
 }
 
 body.mobile-view .source-select-btn,
 body.mobile-view .search-btn {
-    background: var(--mobile-button-bg);
-    color: var(--mobile-text-color);
-    border-color: var(--mobile-border-color);
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--button-border);
+    background: var(--button-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 1rem;
 }
 
 body.mobile-view .search-btn {
-    background: var(--mobile-primary-color);
-    color: #ffffff;
-    border-color: transparent;
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    font-weight: 600;
 }
 
-/* 搜索结果 */
+body.mobile-view .search-results {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 16px;
+}
+
 body.mobile-view .search-result-item {
-    background: var(--mobile-item-bg);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--item-bg);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
 }
 
 body.mobile-view .search-result-item.selected {
-    background: var(--mobile-hover-bg);
-    border-color: var(--mobile-primary-color);
-}
-
-body.mobile-view .search-result-title {
-    color: var(--mobile-text-color);
-}
-
-body.mobile-view .search-result-artist {
-    color: var(--mobile-text-secondary);
+    border: 2px solid var(--primary-color);
+    background: var(--hover-bg);
 }
 
 body.mobile-view .search-result-select {
-    border-color: var(--mobile-border-color);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--button-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--primary-color);
 }
 
 body.mobile-view .search-result-item.selected .search-result-select {
-    background: var(--mobile-primary-color);
-    border-color: var(--mobile-primary-color);
+    background: var(--primary-color);
+    color: white;
 }
 
-/* 歌词 */
-body.mobile-view .mobile-inline-lyrics {
-    background: var(--mobile-item-bg);
+body.mobile-view .search-result-info {
+    flex: 1;
+    min-width: 0;
 }
 
-body.mobile-view .mobile-inline-lyrics__hint {
-    color: var(--mobile-text-secondary);
+body.mobile-view .search-result-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-body.mobile-view .mobile-inline-lyrics__content > div {
-    color: var(--mobile-text-secondary);
-}
-
-body.mobile-view .mobile-inline-lyrics__content .current {
-    color: var(--mobile-primary-color);
-    background: var(--mobile-hover-bg);
+body.mobile-view .search-result-artist {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* 遮罩 */
 body.mobile-view .mobile-overlay-scrim {
-    background: var(--mobile-overlay-bg);
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 200;
+}
+
+body.mobile-view.mobile-search-open .mobile-overlay-scrim,
+body.mobile-view.mobile-panel-open .mobile-overlay-scrim {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 /* 通知 */
 body.mobile-view #notification {
-    background: var(--mobile-primary-color);
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + 16px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-200px);
+    background: var(--primary-color);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    transition: transform 0.3s;
+    z-index: 1000;
+    max-width: calc(100vw - 32px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-body.mobile-view #notification.error {
-    background: #e74c3c;
+body.mobile-view #notification.show {
+    transform: translateX(-50%) translateY(0);
 }
 
-body.mobile-view #notification.warning {
-    background: #f39c12;
-}
-
-/* ===== 设置面板样式 ===== */
+/* 设置面板 */
 .mobile-settings-panel {
     position: fixed;
-    left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     height: var(--mobile-vh, 100dvh);
-    background: var(--mobile-panel-bg);
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
+    background: var(--panel-bg);
     z-index: 500;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     display: flex;
     flex-direction: column;
-    box-sizing: border-box;
-    max-width: 100vw;
-    overflow: hidden;
 }
 
 body.mobile-view.mobile-settings-open .mobile-settings-panel {
@@ -403,15 +762,14 @@ body.mobile-view.mobile-settings-open .mobile-settings-panel {
     align-items: center;
     justify-content: space-between;
     padding: calc(env(safe-area-inset-top) + 16px) 20px 16px;
-    border-bottom: 1px solid var(--mobile-border-color);
-    flex-shrink: 0;
-    background: var(--mobile-container-bg);
+    border-bottom: 1px solid var(--item-bg);
+    background: var(--bg-color);
 }
 
 .mobile-settings-title {
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     font-weight: 600;
-    color: var(--mobile-text-color);
+    color: var(--text-primary);
     margin: 0;
 }
 
@@ -419,50 +777,40 @@ body.mobile-view.mobile-settings-open .mobile-settings-panel {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 1px solid var(--mobile-border-color);
-    background: var(--mobile-button-bg);
-    color: var(--mobile-text-color);
+    border: 1px solid var(--button-border);
+    background: var(--button-bg);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     font-size: 1.2rem;
-    transition: all 0.2s ease;
-}
-
-.mobile-settings-close:active {
-    transform: scale(0.95);
-    background: var(--mobile-hover-bg);
 }
 
 .mobile-settings-content {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
-    -webkit-overflow-scrolling: touch;
-    background: var(--mobile-container-bg);
+    background: var(--bg-color);
 }
 
 .mobile-settings-section {
-    margin-bottom: 28px;
+    margin-bottom: 24px;
 }
 
 .mobile-settings-section-title {
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--mobile-text-secondary);
+    color: var(--text-secondary);
+    margin-bottom: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 12px;
-    padding-left: 4px;
 }
 
-/* 主题网格 - 自适应列数 */
 .mobile-theme-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
-    max-width: 100%;
 }
 
 .mobile-theme-item {
@@ -471,9 +819,8 @@ body.mobile-view.mobile-settings-open .mobile-settings-panel {
     border: 3px solid transparent;
     cursor: pointer;
     position: relative;
-    overflow: hidden;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px var(--mobile-shadow);
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: transform 0.2s;
 }
 
 .mobile-theme-item:active {
@@ -481,8 +828,8 @@ body.mobile-view.mobile-settings-open .mobile-settings-panel {
 }
 
 .mobile-theme-item.active {
-    border-color: var(--mobile-primary-color);
-    box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 4px 12px rgba(0,0,0,0.15);
+    border-color: var(--primary-color);
+    transform: scale(1.05);
 }
 
 .mobile-theme-item.active::after {
@@ -494,89 +841,45 @@ body.mobile-view.mobile-settings-open .mobile-settings-panel {
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 1.5rem;
-    color: var(--mobile-primary-color);
-    text-shadow: 0 0 4px rgba(255,255,255,0.8);
+    color: var(--primary-color);
+    text-shadow: 0 0 4px white;
 }
 
-/* 主题预览色块 */
+/* 主题色块 */
 .theme-white { background: linear-gradient(135deg, #ffffff, #f0f0f0); }
 .theme-black { background: linear-gradient(135deg, #2c2c2c, #1a1a1a); }
-.theme-light-blue { background: linear-gradient(135deg, #e3f2fd, #90caf9); }
-.theme-light-green { background: linear-gradient(135deg, #e8f5e9, #a5d6a7); }
-.theme-huawei-1 { background: linear-gradient(135deg, #ffffff, #cf0a2c); }
-.theme-huawei-2 { background: linear-gradient(135deg, #ffffff, #007dff); }
-.theme-ios-1 { background: linear-gradient(135deg, #f2f2f7, #ffffff); }
-.theme-ios-2 { background: linear-gradient(135deg, #1c1c1e, #000000); }
+.theme-gray { background: linear-gradient(135deg, #f5f5f5, #9e9e9e); }
+.theme-purple { background: linear-gradient(135deg, #e1bee7, #9c27b0); }
+.theme-blue { background: linear-gradient(135deg, #bbdefb, #2196f3); }
+.theme-green { background: linear-gradient(135deg, #c8e6c9, #4caf50); }
+.theme-red { background: linear-gradient(135deg, #ffcdd2, #f44336); }
+.theme-orange { background: linear-gradient(135deg, #ffe0b2, #ff9800); }
 
-/* 字体大小选项 */
 .mobile-font-size-options {
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .mobile-font-size-btn {
     flex: 1;
-    min-width: 60px;
-    padding: 14px 16px;
-    border: 2px solid var(--mobile-border-color);
-    background: var(--mobile-button-bg);
-    color: var(--mobile-text-color);
+    padding: 16px;
     border-radius: 12px;
-    font-size: 1rem;
+    border: 2px solid var(--button-border);
+    background: var(--button-bg);
+    color: var(--text-primary);
     cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: center;
+    font-size: 1rem;
     font-weight: 500;
-}
-
-.mobile-font-size-btn:active {
-    transform: scale(0.98);
+    transition: all 0.2s;
 }
 
 .mobile-font-size-btn.active {
-    background: var(--mobile-primary-color);
-    color: #ffffff;
-    border-color: var(--mobile-primary-color);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
-/* 确保内容不超出屏幕 */
-body.mobile-view .container {
-    max-width: 420px;
-    width: 100%;
-    margin: 0 auto;
-}
-
-body.mobile-view .search-area,
-body.mobile-view .mobile-panel,
-body.mobile-view .mobile-settings-panel {
-    max-width: 100vw;
-    box-sizing: border-box;
-}
-
-body.mobile-view .notification {
-    max-width: calc(100% - 40px);
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%) translateX(400px);
-}
-
-body.mobile-view .notification.show {
-    transform: translateX(-50%) translateX(0);
-}
-
-/* 菜单不超出屏幕 */
-body.mobile-view .source-menu,
-body.mobile-view .player-quality-menu,
-body.mobile-view .dynamic-quality-menu {
-    max-width: calc(100vw - 32px);
-    max-height: 60vh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* 滚动条样式 */
+/* 滚动条 */
 body.mobile-view ::-webkit-scrollbar {
     width: 4px;
 }
@@ -586,7 +889,42 @@ body.mobile-view ::-webkit-scrollbar-track {
 }
 
 body.mobile-view ::-webkit-scrollbar-thumb {
-    background: var(--mobile-text-secondary);
+    background: var(--text-secondary);
     opacity: 0.3;
     border-radius: 2px;
+}
+
+/* 质量选择菜单 */
+body.mobile-view .dynamic-quality-menu {
+    position: fixed !important;
+    z-index: 1000;
+    background: var(--panel-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px var(--shadow);
+    padding: 8px 0;
+    min-width: 160px;
+    max-width: calc(100vw - 32px);
+}
+
+body.mobile-view .quality-option {
+    padding: 12px 16px;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+body.mobile-view .quality-option:hover {
+    background: var(--hover-bg);
+}
+
+/* 加载按钮 */
+body.mobile-view .load-more-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--button-border);
+    background: var(--button-bg);
+    color: var(--text-primary);
+    margin-top: 12px;
+    cursor: pointer;
+    font-size: 0.95rem;
 }
