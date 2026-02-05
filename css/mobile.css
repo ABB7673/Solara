@@ -1,3 +1,554 @@
+/* 主题变量定义 */
+:root {
+    /* 字体大小 */
+    --font-size-small: 14px;
+    --font-size-normal: 16px;
+    --font-size-large: 18px;
+    --font-size-xlarge: 20px;
+    --current-font-size: var(--font-size-normal);
+    
+    /* 默认白色主题 */
+    --mobile-bg: radial-gradient(120% 140% at 50% 0%, #f5f7fa 0%, #e8ecf1 70%, #dfe4ea 100%);
+    --mobile-container-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 247, 250, 0.95));
+    --mobile-text-color: #2c3e50;
+    --mobile-text-secondary: #7f8c8d;
+    --mobile-border-color: rgba(0, 0, 0, 0.08);
+    --mobile-button-bg: rgba(255, 255, 255, 0.9);
+    --mobile-primary-color: #1abc9c;
+    --mobile-panel-bg: rgba(255, 255, 255, 0.96);
+    --mobile-item-bg: rgba(0, 0, 0, 0.03);
+    --mobile-hover-bg: rgba(26, 188, 156, 0.1);
+    --mobile-shadow: rgba(0, 0, 0, 0.08);
+    --mobile-overlay-bg: rgba(0, 0, 0, 0.4);
+}
+
+/* 黑色主题 */
+body.mobile-view.theme-black {
+    --mobile-bg: radial-gradient(120% 140% at 50% 0%, #1b1d24 0%, #0d1018 70%, #05070c 100%);
+    --mobile-container-bg: linear-gradient(180deg, rgba(27, 29, 36, 0.98), rgba(7, 9, 14, 0.95));
+    --mobile-text-color: #f2f5f9;
+    --mobile-text-secondary: #95a5a6;
+    --mobile-border-color: rgba(255, 255, 255, 0.12);
+    --mobile-button-bg: rgba(255, 255, 255, 0.08);
+    --mobile-primary-color: #1abc9c;
+    --mobile-panel-bg: rgba(13, 16, 24, 0.98);
+    --mobile-item-bg: rgba(255, 255, 255, 0.05);
+    --mobile-hover-bg: rgba(26, 188, 156, 0.2);
+    --mobile-shadow: rgba(0, 0, 0, 0.4);
+    --mobile-overlay-bg: rgba(0, 0, 0, 0.6);
+}
+
+/* 淡蓝色主题 */
+body.mobile-view.theme-light-blue {
+    --mobile-bg: radial-gradient(120% 140% at 50% 0%, #e3f2fd 0%, #bbdefb 70%, #90caf9 100%);
+    --mobile-container-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(227, 242, 253, 0.95));
+    --mobile-text-color: #1565c0;
+    --mobile-text-secondary: #607d8b;
+    --mobile-border-color: rgba(33, 150, 243, 0.2);
+    --mobile-button-bg: rgba(255, 255, 255, 0.9);
+    --mobile-primary-color: #2196f3;
+    --mobile-panel-bg: rgba(255, 255, 255, 0.96);
+    --mobile-item-bg: rgba(33, 150, 243, 0.08);
+    --mobile-hover-bg: rgba(33, 150, 243, 0.15);
+    --mobile-shadow: rgba(33, 150, 243, 0.15);
+    --mobile-overlay-bg: rgba(21, 101, 192, 0.4);
+}
+
+/* 淡绿色主题 */
+body.mobile-view.theme-light-green {
+    --mobile-bg: radial-gradient(120% 140% at 50% 0%, #e8f5e9 0%, #c8e6c9 70%, #a5d6a7 100%);
+    --mobile-container-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(232, 245, 233, 0.95));
+    --mobile-text-color: #2e7d32;
+    --mobile-text-secondary: #689f38;
+    --mobile-border-color: rgba(76, 175, 80, 0.2);
+    --mobile-button-bg: rgba(255, 255, 255, 0.9);
+    --mobile-primary-color: #4caf50;
+    --mobile-panel-bg: rgba(255, 255, 255, 0.96);
+    --mobile-item-bg: rgba(76, 175, 80, 0.08);
+    --mobile-hover-bg: rgba(76, 175, 80, 0.15);
+    --mobile-shadow: rgba(76, 175, 80, 0.15);
+    --mobile-overlay-bg: rgba(46, 125, 50, 0.4);
+}
+
+/* 华为风格主题1 - EMUI经典 */
+body.mobile-view.theme-huawei-1 {
+    --mobile-bg: linear-gradient(135deg, #f6f8fb 0%, #e9edf5 100%);
+    --mobile-container-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 248, 251, 0.95));
+    --mobile-text-color: #333333;
+    --mobile-text-secondary: #666666;
+    --mobile-border-color: rgba(0, 0, 0, 0.06);
+    --mobile-button-bg: #ffffff;
+    --mobile-primary-color: #cf0a2c;
+    --mobile-panel-bg: rgba(255, 255, 255, 0.98);
+    --mobile-item-bg: #f2f3f5;
+    --mobile-hover-bg: rgba(207, 10, 44, 0.08);
+    --mobile-shadow: rgba(0, 0, 0, 0.06);
+    --mobile-overlay-bg: rgba(0, 0, 0, 0.5);
+}
+
+/* 华为风格主题2 - HarmonyOS */
+body.mobile-view.theme-huawei-2 {
+    --mobile-bg: linear-gradient(135deg, #f0f2f5 0%, #e6e9f0 100%);
+    --mobile-container-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 242, 245, 0.95));
+    --mobile-text-color: #1a1a1a;
+    --mobile-text-secondary: #666666;
+    --mobile-border-color: rgba(0, 0, 0, 0.08);
+    --mobile-button-bg: linear-gradient(135deg, #ffffff, #f5f7fa);
+    --mobile-primary-color: #007dff;
+    --mobile-panel-bg: rgba(255, 255, 255, 0.98);
+    --mobile-item-bg: #f5f7fa;
+    --mobile-hover-bg: rgba(0, 125, 255, 0.1);
+    --mobile-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --mobile-overlay-bg: rgba(0, 0, 0, 0.5);
+}
+
+/* 苹果风格主题1 - iOS Light */
+body.mobile-view.theme-ios-1 {
+    --mobile-bg: #f2f2f7;
+    --mobile-container-bg: #ffffff;
+    --mobile-text-color: #000000;
+    --mobile-text-secondary: #8e8e93;
+    --mobile-border-color: rgba(0, 0, 0, 0.1);
+    --mobile-button-bg: #ffffff;
+    --mobile-primary-color: #007aff;
+    --mobile-panel-bg: rgba(255, 255, 255, 0.98);
+    --mobile-item-bg: #f2f2f7;
+    --mobile-hover-bg: rgba(0, 122, 255, 0.1);
+    --mobile-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --mobile-overlay-bg: rgba(0, 0, 0, 0.4);
+}
+
+/* 苹果风格主题2 - iOS Dark */
+body.mobile-view.theme-ios-2 {
+    --mobile-bg: #000000;
+    --mobile-container-bg: #1c1c1e;
+    --mobile-text-color: #ffffff;
+    --mobile-text-secondary: #8e8e93;
+    --mobile-border-color: rgba(255, 255, 255, 0.15);
+    --mobile-button-bg: #2c2c2e;
+    --mobile-primary-color: #0a84ff;
+    --mobile-panel-bg: rgba(28, 28, 30, 0.98);
+    --mobile-item-bg: #2c2c2e;
+    --mobile-hover-bg: rgba(10, 132, 255, 0.2);
+    --mobile-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --mobile-overlay-bg: rgba(0, 0, 0, 0.6);
+}
+
+/* 字体大小类 */
+body.mobile-view.font-small {
+    --current-font-size: var(--font-size-small);
+}
+
+body.mobile-view.font-normal {
+    --current-font-size: var(--font-size-normal);
+}
+
+body.mobile-view.font-large {
+    --current-font-size: var(--font-size-large);
+}
+
+body.mobile-view.font-xlarge {
+    --current-font-size: var(--font-size-xlarge);
+}
+
+/* 应用主题变量到现有样式 */
+body.mobile-view {
+    background: var(--mobile-bg);
+    color: var(--mobile-text-color);
+    font-size: var(--current-font-size);
+}
+
+body.mobile-view .container {
+    background: var(--mobile-container-bg);
+    box-shadow: 0 32px 90px var(--mobile-shadow);
+}
+
+body.mobile-view .mobile-toolbar__title {
+    color: var(--mobile-text-color);
+}
+
+body.mobile-view .mobile-toolbar__button {
+    background: var(--mobile-button-bg);
+    border-color: var(--mobile-border-color);
+    color: var(--mobile-text-color);
+}
+
+body.mobile-view .mobile-toolbar__button:hover,
+body.mobile-view .mobile-toolbar__button:focus-visible,
+body.mobile-view .mobile-toolbar__button:active {
+    background: var(--mobile-hover-bg);
+    border-color: var(--mobile-primary-color);
+    color: var(--mobile-primary-color);
+}
+
+body.mobile-view .current-song-title {
+    color: var(--mobile-text-color);
+}
+
+body.mobile-view .current-song-artist {
+    color: var(--mobile-text-secondary);
+}
+
+body.mobile-view .mobile-quality-chip {
+    background: var(--mobile-button-bg);
+    border-color: var(--mobile-border-color);
+    color: var(--mobile-text-secondary);
+}
+
+body.mobile-view .mobile-quality-chip.active {
+    background: linear-gradient(135deg, var(--mobile-primary-color), var(--mobile-primary-color));
+    color: #ffffff;
+    border-color: transparent;
+}
+
+body.mobile-view .mobile-panel {
+    background: var(--mobile-panel-bg);
+    box-shadow: 0 -28px 60px var(--mobile-shadow);
+}
+
+body.mobile-view .mobile-panel-header {
+    color: var(--mobile-text-color);
+}
+
+body.mobile-view .mobile-panel-handle {
+    background: var(--mobile-text-secondary);
+}
+
+body.mobile-view .mobile-panel-action-btn,
+body.mobile-view .mobile-close-btn {
+    background: var(--mobile-button-bg);
+    border-color: var(--mobile-border-color);
+    color: var(--mobile-text-color);
+}
+
+body.mobile-view .playlist-items .playlist-item {
+    background: var(--mobile-item-bg);
+    color: var(--mobile-text-color);
+}
+
+body.mobile-view .playlist-items .playlist-item:hover,
+body.mobile-view .playlist-items .playlist-item.current {
+    background: var(--mobile-hover-bg);
+    color: var(--mobile-primary-color);
+}
+
+body.mobile-view .mobile-panel-clear-btn {
+    color: var(--mobile-text-color);
+    border-color: var(--mobile-border-color);
+}
+
+body.mobile-view .transport-button {
+    background: var(--mobile-button-bg);
+    color: var(--mobile-text-color);
+    box-shadow: 0 12px 28px var(--mobile-shadow);
+}
+
+body.mobile-view .transport-button--play {
+    background: linear-gradient(135deg, var(--mobile-primary-color), var(--mobile-primary-color));
+    color: #ffffff;
+}
+
+body.mobile-view .play-mode-btn {
+    background: var(--mobile-button-bg);
+    color: var(--mobile-text-color);
+}
+
+body.mobile-view input[type="range"] {
+    background: linear-gradient(to right,
+        var(--mobile-primary-color) 0%,
+        var(--mobile-primary-color) var(--progress, 0%),
+        var(--mobile-item-bg) var(--progress, 0%),
+        var(--mobile-item-bg) 100%);
+}
+
+body.mobile-view .progress-container span {
+    color: var(--mobile-text-secondary);
+}
+
+body.mobile-view .mobile-overlay-scrim {
+    background: var(--mobile-overlay-bg);
+}
+
+body.mobile-view .search-area {
+    background: var(--mobile-panel-bg);
+}
+
+body.mobile-view .search-container {
+    background: var(--mobile-item-bg);
+    border-color: var(--mobile-border-color);
+}
+
+body.mobile-view .search-input {
+    color: var(--mobile-text-color);
+}
+
+body.mobile-view .search-input::placeholder {
+    color: var(--mobile-text-secondary);
+}
+
+body.mobile-view .source-select-btn,
+body.mobile-view .search-btn {
+    background: var(--mobile-button-bg);
+    color: var(--mobile-text-color);
+    border-color: var(--mobile-border-color);
+}
+
+body.mobile-view .notification {
+    background: var(--mobile-primary-color);
+    color: #ffffff;
+}
+
+body.mobile-view .notification.error {
+    background: #e74c3c;
+}
+
+body.mobile-view .notification.warning {
+    background: #f39c12;
+}
+
+/* 设置面板样式 */
+.mobile-settings-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100vw;
+    height: 100%;
+    max-height: 100vh;
+    background: var(--mobile-panel-bg);
+    backdrop-filter: blur(28px);
+    z-index: 500;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+body.mobile-view.mobile-settings-open .mobile-settings-panel {
+    transform: translateX(0);
+}
+
+.mobile-settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: calc(env(safe-area-inset-top) + 16px) 20px 16px;
+    border-bottom: 1px solid var(--mobile-border-color);
+    flex-shrink: 0;
+}
+
+.mobile-settings-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--mobile-text-color);
+    margin: 0;
+}
+
+.mobile-settings-close {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--mobile-border-color);
+    background: var(--mobile-button-bg);
+    color: var(--mobile-text-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.mobile-settings-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-settings-section {
+    margin-bottom: 28px;
+}
+
+.mobile-settings-section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--mobile-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    padding-left: 4px;
+}
+
+.mobile-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-width: 100%;
+}
+
+.mobile-theme-item {
+    aspect-ratio: 1;
+    border-radius: 16px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px var(--mobile-shadow);
+}
+
+.mobile-theme-item:hover,
+.mobile-theme-item:focus {
+    transform: scale(1.05);
+}
+
+.mobile-theme-item.active {
+    border-color: var(--mobile-primary-color);
+    box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.2);
+}
+
+.mobile-theme-item.active::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* 主题预览色块 */
+.theme-white { background: linear-gradient(135deg, #f5f7fa, #e8ecf1); }
+.theme-black { background: linear-gradient(135deg, #1b1d24, #0d1018); }
+.theme-light-blue { background: linear-gradient(135deg, #e3f2fd, #bbdefb); }
+.theme-light-green { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); }
+.theme-huawei-1 { background: linear-gradient(135deg, #f6f8fb, #e9edf5); }
+.theme-huawei-2 { background: linear-gradient(135deg, #f0f2f5, #e6e9f0); }
+.theme-ios-1 { background: linear-gradient(135deg, #f2f2f7, #ffffff); }
+.theme-ios-2 { background: linear-gradient(135deg, #1c1c1e, #000000); }
+
+.mobile-font-size-options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    max-width: 100%;
+}
+
+.mobile-font-size-btn {
+    flex: 1;
+    min-width: 60px;
+    padding: 12px 16px;
+    border: 1px solid var(--mobile-border-color);
+    background: var(--mobile-button-bg);
+    color: var(--mobile-text-color);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.mobile-font-size-btn:hover,
+.mobile-font-size-btn:focus {
+    border-color: var(--mobile-primary-color);
+    background: var(--mobile-hover-bg);
+}
+
+.mobile-font-size-btn.active {
+    background: var(--mobile-primary-color);
+    color: #ffffff;
+    border-color: var(--mobile-primary-color);
+}
+
+/* 确保所有内容不超出屏幕 */
+body.mobile-view .container {
+    max-width: 100vw;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+body.mobile-view .mobile-panel {
+    width: 100%;
+    max-width: 100%;
+    left: 0;
+    transform: translateY(110%);
+    border-radius: 28px 28px 0 0;
+}
+
+body.mobile-view.mobile-panel-open .mobile-panel {
+    transform: translateY(0);
+}
+
+body.mobile-view .search-area {
+    max-width: 100vw;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+body.mobile-view .notification {
+    max-width: calc(100vw - 40px);
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateX(400px);
+}
+
+body.mobile-view .notification.show {
+    transform: translateX(-50%) translateX(0);
+}
+
+/* 修复弹窗和菜单不超出屏幕 */
+body.mobile-view .source-menu,
+body.mobile-view .player-quality-menu,
+body.mobile-view .import-dropdown-menu {
+    max-width: calc(100vw - 40px);
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+body.mobile-view .dynamic-quality-menu {
+    max-width: calc(100vw - 40px);
+    position: fixed !important;
+    z-index: 10000;
+}
+
+/* 歌词面板适配 */
+body.mobile-view .mobile-inline-lyrics {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 播放列表项文字截断 */
+body.mobile-view .playlist-items .playlist-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* 搜索结果显示适配 */
+body.mobile-view .search-result-item {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+body.mobile-view .search-result-info {
+    min-width: 0;
+    overflow: hidden;
+}
+
+body.mobile-view .search-result-title,
+body.mobile-view .search-result-artist {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Mobile-specific layout inspired by a dedicated music player interface */
 
 html.mobile-view,
