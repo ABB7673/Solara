@@ -5651,11 +5651,11 @@ async function exploreOnlineMusic() {
         setLoading(true);
         
         // 使用多种关键词随机探索
-        const keywords = ["热门", "流行", "新歌", "经典", "华语", "欧美", "抖音", "网络"];
+        const keywords = ["热门", "华语流行", "新歌", "影视经典", "华语", "欧美流行", "抖音", "KTV"];
         const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
         
         // 默认使用酷我音源探索
-        const results = await API.search(randomKeyword, "kuwo", 30, 1);
+        const results = await API.search(randomKeyword, "kuwo", 100, 1);
         
         if (!results || results.length === 0) {
             showNotification("探索雷达未找到歌曲", "error");
