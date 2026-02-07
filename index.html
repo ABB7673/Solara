@@ -132,33 +132,19 @@
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
             <div class="search-container">
-    <!-- 搜索类型选择 -->
-    <div class="search-type-wrapper" id="searchTypeWrapper">
-        <button class="search-type-btn" id="searchTypeBtn" type="button">
-            <span id="searchTypeLabel">歌曲</span>
-            <i class="fas fa-chevron-down" style="font-size: 0.8em;"></i>
-        </button>
-        <div class="search-type-menu" id="searchTypeMenu">
-            <div class="search-type-option active" data-type="song">歌曲</div>
-            <div class="search-type-option" data-type="playlist">歌单</div>
-        </div>
-    </div>
-    
-    <input type="text" id="searchInput" class="search-input" placeholder="搜索歌曲、歌手或专辑...">
-    
-    <div class="source-select-wrapper" id="sourceSelectWrapper">
-        <button id="sourceSelectButton" class="source-select-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
-            <span id="sourceSelectLabel">酷我音乐</span>
-            <i class="fas fa-chevron-down caret-icon" aria-hidden="true"></i>
-        </button>
-        <div id="sourceMenu" class="source-menu" role="listbox" aria-labelledby="sourceSelectButton"></div>
-    </div>
-    
-    <button id="searchBtn" class="search-btn">
-        <i class="fas fa-search"></i>
-        <span>搜索</span>
-    </button>
-</div>
+                <input type="text" id="searchInput" class="search-input" placeholder="搜索歌曲、歌手或专辑...">
+                <div class="source-select-wrapper" id="sourceSelectWrapper">
+                    <button id="sourceSelectButton" class="source-select-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                        <span id="sourceSelectLabel">网易云音乐</span>
+                        <i class="fas fa-chevron-down caret-icon" aria-hidden="true"></i>
+                    </button>
+                    <div id="sourceMenu" class="source-menu" role="listbox" aria-labelledby="sourceSelectButton"></div>
+                </div>
+                <button id="searchBtn" class="search-btn">
+                    <i class="fas fa-search"></i>
+                    <span>搜索</span>
+                </button>
+            </div>
             <div id="searchResults" class="search-results">
                 <div class="search-results-toolbar">
                     <div class="import-dropdown">
@@ -232,24 +218,33 @@
 
             <div class="mobile-panel" id="mobilePanel">
                 <div class="mobile-panel-header" id="mobilePanelHeader">
-    <div class="mobile-panel-handle" aria-hidden="true"></div>
-    <div class="playlist-tabs" role="tablist">
-        <button id="mobilePlaylistTab" class="playlist-tab active" type="button" role="tab" aria-selected="true" data-target="playlist">
-            播放列表
-        </button>
-        <button id="mobileFavoritesTab" class="playlist-tab" type="button" role="tab" aria-selected="false" data-target="favorites">
-            收藏列表
-        </button>
-    </div>
-    <!-- 歌单收藏按钮 -->
-    <button class="playlist-collection-btn" id="playlistCollectionBtn" type="button">
-        <i class="fas fa-list-alt"></i>
-        <span>歌单收藏</span>
-    </button>
-    <div class="mobile-panel-actions">
-        <!-- ... 原有按钮 ... -->
-    </div>
-</div>
+                    <div class="mobile-panel-handle" aria-hidden="true"></div>
+                    <div class="playlist-tabs" role="tablist">
+                        <button
+                            id="mobilePlaylistTab"
+                            class="playlist-tab active"
+                            type="button"
+                            role="tab"
+                            aria-selected="true"
+                            data-target="playlist"
+                        >
+                            播放列表
+                        </button>
+                        <button
+                            id="mobileFavoritesTab"
+                            class="playlist-tab"
+                            type="button"
+                            role="tab"
+                            aria-selected="false"
+                            data-target="favorites"
+                        >
+                            收藏列表
+                        </button>
+                    </div>
+                    <button class="playlist-collection-btn" id="playlistCollectionBtn" type="button">
+                        <i class="fas fa-list-alt"></i>
+                        <span>歌单收藏</span>
+                    </button>
                     <div class="mobile-panel-actions">
                         <div class="mobile-actions-group" id="mobilePlaylistActions" role="group" aria-label="播放列表操作" aria-hidden="false">
                             <button
@@ -463,12 +458,10 @@
                         <div class="playlist-items" id="favoriteItems"></div>
                     </div>
                 </div>
-                            <!-- 歌单收藏列表 -->
-            <div class="playlist-collection-list" id="playlistCollectionList">
-                <div class="playlist-collection-items" id="playlistCollectionItems">
-                    <!-- 歌单项目将动态添加到这里 -->
+                <div class="playlist-collection-list" id="playlistCollectionList">
+                    <div class="playlist-collection-items" id="playlistCollectionItems">
+                         </div>
                 </div>
-            </div>
                 <div class="lyrics empty" id="lyrics" data-placeholder="default">
                     <div class="lyrics-scroll" id="lyricsScroll">
                         <div class="lyrics-content" id="lyricsContent"></div>
