@@ -5655,7 +5655,7 @@ async function exploreOnlineMusic() {
         const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
         
         // 默认使用酷我音源探索
-        const results = await API.search(randomKeyword, "kuwo", 30, 1);
+        const results = await API.search(randomKeyword, "kuwo", 100, 1);
         
         if (!results || results.length === 0) {
             showNotification("探索雷达未找到歌曲", "error");
