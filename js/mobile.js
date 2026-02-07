@@ -125,25 +125,30 @@
     }
 
     function initializeMobileUIImpl() {
-        if (initialized || !document.body) {
-            return;
-        }
+        if (initialized || !document.body) return;
         initialized = true;
 
         document.body.classList.add("mobile-view");
+        
+        // 强制全屏样式
+        document.documentElement.style.setProperty('--mobile-vh', window.innerHeight + 'px');
+        
         const initialView = "playlist";
         document.body.setAttribute("data-mobile-panel-view", initialView);
-        if (dom.mobilePanelTitle) {
-            dom.mobilePanelTitle.textContent = "播放列表";
-        }
-        if (dom.lyrics) {
-            dom.lyrics.classList.remove("active");
-        }
-        if (dom.playlist) {
-            dom.playlist.classList.add("active");
-        }
+        
+        if (dom.lyrics) dom.lyrics.classList.remove("active");
+        if (dom.playlist) dom.playlist.classList.add("active");
 
         updateMobileToolbarTitleImpl();
+
+        // 绑定设置按钮
+        if (dom.mobileSettingsToggle) {
+            dom.mobileSettingsToggle.addEventListener("click", () => {
+                if (window.SolaraThemeManager) {
+                    window.SolaraThemeManager.toggleSettingsPanel();
+                }
+            });
+        }
 
         if (dom.mobileSearchToggle) {
             dom.mobileSearchToggle.addEventListener("click", toggleMobileSearchImpl);
@@ -157,130 +162,54 @@
         if (dom.mobileQueueToggle) {
             dom.mobileQueueToggle.addEventListener("click", () => openMobilePanelImpl("playlist"));
         }
+        
+        // 绑定探索雷达按钮
+        if (dom.mobileExploreButton) {
+            dom.mobileExploreButton.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                closeAllMobileOverlaysImpl();
+                exploreOnlineMusic();
+            });
+        }
+
         const handleGlobalPointerDown = (event) => {
-            if (!document.body) {
-                return;
-            }
+            if (!document.body) return;
+            const target = event.target;
+            
+            // 排除设置面板
+            const settingsPanel = document.getElementById('mobileSettingsPanel');
+            if (settingsPanel && settingsPanel.contains(target)) return;
+            
+            // 排除搜索类型菜单
+            const searchTypeMenu = document.getElementById('searchTypeMenu');
+            const searchTypeBtn = document.getElementById('searchTypeBtn');
+            if ((searchTypeMenu && searchTypeMenu.contains(target)) || target === searchTypeBtn) return;
+
             const hasOverlay = document.body.classList.contains("mobile-search-open") ||
                 document.body.classList.contains("mobile-panel-open");
-            if (!hasOverlay) {
-                return;
-            }
+            
+            if (!hasOverlay) return;
 
-            const target = event.target;
-            if (dom.mobilePanel && (dom.mobilePanel === target || dom.mobilePanel.contains(target))) {
-                return;
-            }
-            if (dom.searchArea && (dom.searchArea === target || dom.searchArea.contains(target))) {
-                return;
-            }
-            if (dom.playerQualityMenu && dom.playerQualityMenu.contains(target)) {
-                return;
-            }
-            if (target && typeof target.closest === "function" && target.closest(".quality-menu")) {
-                return;
-            }
+            if (dom.mobilePanel && dom.mobilePanel.contains(target)) return;
+            if (dom.searchArea && dom.searchArea.contains(target)) return;
+            if (dom.playerQualityMenu && dom.playerQualityMenu.contains(target)) return;
+            if (target.closest(".quality-menu")) return;
 
             closeAllMobileOverlaysImpl();
         };
 
         document.addEventListener("pointerdown", handleGlobalPointerDown, true);
-        if (dom.searchArea) {
-            dom.searchArea.setAttribute("aria-hidden", "true");
-        }
-        if (dom.mobileOverlayScrim) {
-            dom.mobileOverlayScrim.setAttribute("aria-hidden", "true");
-        }
-
-        function initializeMobileUIImpl() {
-    if (initialized || !document.body) return;
-    initialized = true;
-
-    document.body.classList.add("mobile-view");
-    
-    // 强制全屏样式
-    document.documentElement.style.setProperty('--mobile-vh', window.innerHeight + 'px');
-    
-    const initialView = "playlist";
-    document.body.setAttribute("data-mobile-panel-view", initialView);
-    
-    if (dom.lyrics) dom.lyrics.classList.remove("active");
-    if (dom.playlist) dom.playlist.classList.add("active");
-
-    updateMobileToolbarTitleImpl();
-
-    // 绑定设置按钮
-    if (dom.mobileSettingsToggle) {
-        dom.mobileSettingsToggle.addEventListener("click", () => {
-            if (window.SolaraThemeManager) {
-                window.SolaraThemeManager.toggleSettingsPanel();
-            }
-        });
-    }
-
-    if (dom.mobileSearchToggle) {
-        dom.mobileSearchToggle.addEventListener("click", toggleMobileSearchImpl);
-    }
-    if (dom.mobileSearchClose) {
-        dom.mobileSearchClose.addEventListener("click", closeMobileSearchImpl);
-    }
-    if (dom.mobilePanelClose) {
-        dom.mobilePanelClose.addEventListener("click", closeMobilePanelImpl);
-    }
-    if (dom.mobileQueueToggle) {
-        dom.mobileQueueToggle.addEventListener("click", () => openMobilePanelImpl("playlist"));
-    }
-    
-    // 绑定探索雷达按钮
-    if (dom.mobileExploreButton) {
-        dom.mobileExploreButton.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            closeAllMobileOverlays();
-            exploreOnlineMusic();
-        });
-    }
-
-    const handleGlobalPointerDown = (event) => {
-        if (!document.body) return;
-        const target = event.target;
         
-        // 排除设置面板
-        const settingsPanel = document.getElementById('mobileSettingsPanel');
-        if (settingsPanel && settingsPanel.contains(target)) return;
-        
-        // 排除搜索类型菜单
-        const searchTypeMenu = document.getElementById('searchTypeMenu');
-        const searchTypeBtn = document.getElementById('searchTypeBtn');
-        if ((searchTypeMenu && searchTypeMenu.contains(target)) || target === searchTypeBtn) return;
-
-        const hasOverlay = document.body.classList.contains("mobile-search-open") ||
-            document.body.classList.contains("mobile-panel-open");
-        
-        if (!hasOverlay) return;
-
-        if (dom.mobilePanel && dom.mobilePanel.contains(target)) return;
-        if (dom.searchArea && dom.searchArea.contains(target)) return;
-        if (dom.playerQualityMenu && dom.playerQualityMenu.contains(target)) return;
-        if (target.closest(".quality-menu")) return;
-
-        closeAllMobileOverlaysImpl();
-    };
-
-    document.addEventListener("pointerdown", handleGlobalPointerDown, true);
-    
-    if (dom.searchArea) dom.searchArea.setAttribute("aria-hidden", "true");
-    if (dom.mobileOverlayScrim) dom.mobileOverlayScrim.setAttribute("aria-hidden", "true");
-
-    updateMobileOverlayScrim();
-    
-    // 初始化主题（如果有）
-    if (window.SolaraThemeManager) {
-        window.SolaraThemeManager.init();
-    }
-}
+        if (dom.searchArea) dom.searchArea.setAttribute("aria-hidden", "true");
+        if (dom.mobileOverlayScrim) dom.mobileOverlayScrim.setAttribute("aria-hidden", "true");
 
         updateMobileOverlayScrim();
+        
+        // 初始化主题（如果有）
+        if (window.SolaraThemeManager) {
+            window.SolaraThemeManager.init();
+        }
     }
 
     bridge.handlers.updateToolbarTitle = updateMobileToolbarTitleImpl;
