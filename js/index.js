@@ -5651,7 +5651,7 @@ async function exploreOnlineMusic() {
         setLoading(true);
         
         // 使用多种关键词随机探索
-        const keywords = ["热门", "华语流行", "新歌", "影视经典", "华语", "欧美流行", "抖音", "KTV"];
+        const keywords = ["热门", "流行", "新歌", "经典", "华语", "欧美", "抖音", "网络"];
         const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
         
         // 默认使用酷我音源探索
