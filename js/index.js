@@ -5603,7 +5603,6 @@ const EXPLORE_RADAR_GENRES = [
     "流行",
     "华语",
     "古风",
-    "粤语",
     "轻音乐",
 ];
 
