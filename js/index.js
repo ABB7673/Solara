@@ -5602,10 +5602,10 @@ function updateOnlineHighlight() {
 const EXPLORE_RADAR_GENRES = [
     "流行",
     "华语",
-    "抖音",
+    "旅行",
     "古风",
-    "欧美流行",
-    "影视经典",
+    "欧美",
+    "影视经",
     "KTV",
     "粤语",
     "轻音乐",
